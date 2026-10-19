@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Documentation
+
+- The README banner is the new Hardcharger™ logo, the bull mascot lockup in a light and a dark
+  version that follows the reader's color scheme, in place of the GizmoData banner card.
+
 ## [0.1.0] - 2026-10-19
 
 The Hardcharger™ port of sqlframe-gizmosql 1.6.1: the same PySpark DataFrame API on

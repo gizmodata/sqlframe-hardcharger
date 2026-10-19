@@ -1,6 +1,9 @@
 <p align="center">
   <a href="https://github.com/gizmodata/sqlframe-hardcharger">
-    <img src="docs/assets/sqlframe-hardcharger-banner.svg" alt="SQLFrame Hardcharger™: PySpark DataFrame code on Hardcharger, no Spark cluster. By GizmoData™." width="100%">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hardcharger-banner-dark.png">
+      <img src="docs/assets/hardcharger-banner-light.png" alt="Hardcharger™" width="400">
+    </picture>
   </a>
 </p>
 
