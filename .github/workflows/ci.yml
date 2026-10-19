@@ -77,14 +77,19 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install
+        id: install
         run: |
           uv venv .venv --python 3.14
           uv pip install --python .venv/bin/python dist-driver/*.whl -e ".[dev]"
+      # Each gate runs even when an earlier one failed, so one run reports all of them.
       - name: ruff check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: .venv/bin/ruff check .
       - name: ruff format --check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: .venv/bin/ruff format --check .
       - name: mypy
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: .venv/bin/mypy
 
   unit:
