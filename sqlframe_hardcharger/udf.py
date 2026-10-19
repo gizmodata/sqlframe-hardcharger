@@ -25,3 +25,11 @@ class HardchargerUDFRegistration(_BaseUDFRegistration["HardchargerSession"]):
             f"back into this Python process to run {name!r}. Express the logic with "
             "pyspark.sql.functions or in SQL instead."
         )
+
+import os
+
+planted_format = {  "a":1 }
+
+
+def planted_type_error() -> int:
+    return "not an int"
