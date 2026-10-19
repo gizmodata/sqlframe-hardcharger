@@ -329,3 +329,23 @@ class TestActivateMode:
 
         assert len(result) == 1
         assert result[0].id == 1
+
+
+class TestDuckDB2Lambdas:
+    """DuckDB 2.0 refuses the single-arrow lambda (x -> x + 1). Sessions built through the
+    builder too (its getOrCreate() replaces the session's execution dialect) must write the
+    LAMBDA form."""
+
+    def test_lambda_functions_on_a_builder_session(self, session):
+        from sqlframe_hardcharger import functions as F
+
+        df = session.createDataFrame(data=[([1, 2, None, 3],)], schema=["xs"])
+        row = df.select(
+            F.transform("xs", lambda x: x * 10).alias("tens"),
+            F.filter("xs", lambda x: x > 1).alias("big"),
+            F.array_compact("xs").alias("compact"),
+        ).collect()[0]
+
+        assert row.tens == [10, 20, None, 30]
+        assert row.big == [2, 3]
+        assert row.compact == [1, 2, 3]

@@ -11,11 +11,12 @@ import pyarrow as pa
 import sqlglot
 from sqlframe.base.session import _BaseSession
 from sqlframe.base.util import normalize_string
+from sqlglot.dialects.dialect import Dialect
 from sqlglot.helper import ensure_list
 
 from sqlframe_hardcharger.catalog import HardchargerCatalog
 from sqlframe_hardcharger.dataframe import HardchargerDataFrame
-from sqlframe_hardcharger.dialect import hardcharger_execution_dialect
+from sqlframe_hardcharger.dialect import for_hardcharger
 from sqlframe_hardcharger.readwriter import (
     HardchargerDataFrameReader,
     HardchargerDataFrameWriter,
@@ -115,7 +116,16 @@ class HardchargerSession(
         if not hasattr(self, "_conn"):
             super().__init__(conn=conn)
             self._last_result = None
-            self.execution_dialect = hardcharger_execution_dialect()
+
+    @property
+    def execution_dialect(self) -> Dialect:
+        return self._execution_dialect
+
+    @execution_dialect.setter
+    def execution_dialect(self, dialect: Dialect) -> None:
+        # Both __init__ and the builder's getOrCreate() assign a fresh `duckdb` dialect here;
+        # whichever does, it writes SQL for Hardcharger's DuckDB 2.0 (see dialect.py).
+        self._execution_dialect = for_hardcharger(dialect=dialect)
 
     @cached_property
     def _cur(self) -> HardchargerAdbcCursor:  # type: ignore[override]

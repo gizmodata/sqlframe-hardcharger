@@ -24,8 +24,9 @@ class HardchargerDuckDBGenerator(DuckDB.Generator):  # type: ignore[valid-type,m
         return super().lambda_sql(expression, arrow_sep=arrow_sep, wrap=wrap)
 
 
-def hardcharger_execution_dialect() -> Dialect:
-    """A ``duckdb`` dialect instance whose SQL Hardcharger's DuckDB 2.0 accepts."""
-    dialect = Dialect.get_or_raise("duckdb")
-    dialect.generator_class = HardchargerDuckDBGenerator
+def for_hardcharger(dialect: Dialect) -> Dialect:
+    """``dialect`` itself, writing SQL Hardcharger's DuckDB 2.0 accepts if it is a ``duckdb``
+    dialect instance (sqlglot makes a new instance per lookup, so no other session shares it)."""
+    if isinstance(dialect, DuckDB):
+        dialect.generator_class = HardchargerDuckDBGenerator
     return dialect
