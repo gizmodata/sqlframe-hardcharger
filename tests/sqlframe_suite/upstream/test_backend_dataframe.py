@@ -1,0 +1,342 @@
+# Vendored from eakmanrq/sqlframe v4.5.0 (0e706a1) tests/integration/engines/duck/test_duckdb_dataframe.py by
+# scripts/vendor_sqlframe_suite.py: mechanical rewrites only (see that script). Don't edit;
+# re-run the script. Upstream license: MIT.
+import datetime
+
+import pytest
+
+from sqlframe.base import types
+from tests.sqlframe_suite.compat import DuckDBDataFrame, DuckDBSession
+from tests.sqlframe_suite.compat import functions as F
+
+
+
+@pytest.fixture()
+def duckdb_datatypes(hardcharger_session: DuckDBSession) -> DuckDBDataFrame:
+    return hardcharger_session.createDataFrame(
+        [
+            (
+                1,
+                2.0,
+                "foo",
+                {"a": 1},
+                [types.Row(a=1, b=2)],
+                [1, 2, 3],
+                types.Row(a=1),
+                datetime.date(2022, 1, 1),
+                datetime.datetime(2022, 1, 1, 0, 0, 0),
+                datetime.datetime(2022, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+                True,
+            )
+        ],
+        [
+            "bigint_col",
+            "double_col",
+            "string_col",
+            "map<string,bigint>_col",
+            "array<struct<a:bigint,b:bigint>>",
+            "array<bigint>_col",
+            "struct<a:bigint>_col",
+            "date_col",
+            "timestampntz_col",
+            "timestamptz_col",
+            "boolean_col",
+        ],
+    )
+
+
+def test_print_schema_basic(hardcharger_employee: DuckDBDataFrame, capsys):
+    hardcharger_employee.printSchema()
+    captured = capsys.readouterr()
+    assert (
+        captured.out.strip()
+        == """
+root
+ |-- employee_id: int (nullable = true)
+ |-- fname: string (nullable = true)
+ |-- lname: string (nullable = true)
+ |-- age: int (nullable = true)
+ |-- store_id: int (nullable = true)""".strip()
+    )
+
+
+def test_print_schema_nested(duckdb_datatypes: DuckDBDataFrame, capsys):
+    duckdb_datatypes.printSchema()
+    captured = capsys.readouterr()
+    assert (
+        captured.out.strip()
+        == """
+root
+ |-- bigint_col: bigint (nullable = true)
+ |-- double_col: double (nullable = true)
+ |-- string_col: string (nullable = true)
+ |-- map<string,bigint>_col: map<string, bigint> (nullable = true)
+ |    |-- key: string (nullable = true)
+ |    |-- value: bigint (nullable = true)
+ |-- array<struct<a:bigint,b:bigint>>: array<struct<a: bigint, b: bigint>> (nullable = true)
+ |    |-- element: struct<a: bigint, b: bigint> (nullable = true)
+ |    |    |-- a: bigint (nullable = true)
+ |    |    |-- b: bigint (nullable = true)
+ |-- array<bigint>_col: array<bigint> (nullable = true)
+ |    |-- element: bigint (nullable = true)
+ |-- struct<a:bigint>_col: struct<a: bigint> (nullable = true)
+ |    |-- a: bigint (nullable = true)
+ |-- date_col: date (nullable = true)
+ |-- timestampntz_col: timestamp_ntz (nullable = true)
+ |-- timestamptz_col: timestamp (nullable = true)
+ |-- boolean_col: boolean (nullable = true)""".strip()
+    )
+
+
+def test_schema(hardcharger_employee: DuckDBDataFrame):
+    assert hardcharger_employee.schema == types.StructType(
+        [
+            types.StructField(
+                "employee_id",
+                types.IntegerType(),
+            ),
+            types.StructField(
+                "fname",
+                types.StringType(),
+            ),
+            types.StructField(
+                "lname",
+                types.StringType(),
+            ),
+            types.StructField(
+                "age",
+                types.IntegerType(),
+            ),
+            types.StructField(
+                "store_id",
+                types.IntegerType(),
+            ),
+        ]
+    )
+
+
+def test_schema_nested(duckdb_datatypes: DuckDBDataFrame):
+    assert isinstance(duckdb_datatypes.schema, types.StructType)
+    struct_fields = list(duckdb_datatypes.schema)
+    assert len(struct_fields) == 11
+    assert struct_fields[0].name == "bigint_col"
+    assert struct_fields[0].dataType == types.LongType()
+    assert struct_fields[1].name == "double_col"
+    assert struct_fields[1].dataType == types.DoubleType()
+    assert struct_fields[2].name == "string_col"
+    assert struct_fields[2].dataType == types.StringType()
+    assert struct_fields[3].name == "map<string,bigint>_col"
+    assert struct_fields[3].dataType == types.MapType(
+        types.StringType(),
+        types.LongType(),
+    )
+    assert struct_fields[4].name == "array<struct<a:bigint,b:bigint>>"
+    assert struct_fields[4].dataType == types.ArrayType(
+        types.StructType(
+            [
+                types.StructField(
+                    "a",
+                    types.LongType(),
+                ),
+                types.StructField(
+                    "b",
+                    types.LongType(),
+                ),
+            ]
+        ),
+    )
+    assert struct_fields[5].name == "array<bigint>_col"
+    assert struct_fields[5].dataType == types.ArrayType(
+        types.LongType(),
+    )
+    assert struct_fields[6].name == "struct<a:bigint>_col"
+    assert struct_fields[6].dataType == types.StructType(
+        [
+            types.StructField(
+                "a",
+                types.LongType(),
+            ),
+        ]
+    )
+    assert struct_fields[7].name == "date_col"
+    assert struct_fields[7].dataType == types.DateType()
+    assert struct_fields[8].name == "timestampntz_col"
+    assert struct_fields[8].dataType == types.TimestampNTZType()
+    assert struct_fields[9].name == "timestamptz_col"
+    assert struct_fields[9].dataType == types.TimestampType()
+    assert struct_fields[10].name == "boolean_col"
+    assert struct_fields[10].dataType == types.BooleanType()
+
+
+# https://github.com/eakmanrq/sqlframe/issues/112
+def test_reserved_word(hardcharger_session: DuckDBSession):
+    df = hardcharger_session.createDataFrame(
+        [("2024-01-01", "2024-05-05"), ("2024-05-21", "2024-12-05")],
+        ["start", "end"],
+    )
+    assert df.collect() == [
+        types.Row(start="2024-01-01", end="2024-05-05"),
+        types.Row(start="2024-05-21", end="2024-12-05"),
+    ]
+
+
+def test_to_arrow(hardcharger_employee: DuckDBDataFrame):
+    arrow_table = hardcharger_employee.toArrow()
+    assert arrow_table.num_rows == 5
+    assert arrow_table.num_columns == 5
+    assert arrow_table.column_names == [
+        "employee_id",
+        "fname",
+        "lname",
+        "age",
+        "store_id",
+    ]
+    assert arrow_table.column(0).to_pylist() == [1, 2, 3, 4, 5]
+    assert arrow_table.column(1).to_pylist() == ["Jack", "John", "Kate", "Claire", "Hugo"]
+    assert arrow_table.column(2).to_pylist() == [
+        "Shephard",
+        "Locke",
+        "Austen",
+        "Littleton",
+        "Reyes",
+    ]
+    assert arrow_table.column(3).to_pylist() == [37, 65, 37, 27, 29]
+    assert arrow_table.column(4).to_pylist() == [1, 1, 2, 2, 100]
+
+
+def test_to_arrow_batch(hardcharger_employee: DuckDBDataFrame):
+    record_batch_reader = hardcharger_employee.toArrow(batch_size=1)
+    first_batch = record_batch_reader.read_next_batch()
+    assert first_batch.num_rows == 1
+    assert first_batch.num_columns == 5
+    assert first_batch.column_names == [
+        "employee_id",
+        "fname",
+        "lname",
+        "age",
+        "store_id",
+    ]
+    assert first_batch.column(0).to_pylist() == [1]
+    assert first_batch.column(1).to_pylist() == ["Jack"]
+    assert first_batch.column(2).to_pylist() == ["Shephard"]
+    assert first_batch.column(3).to_pylist() == [37]
+    assert first_batch.column(4).to_pylist() == [1]
+    second_batch = record_batch_reader.read_next_batch()
+    assert second_batch.num_rows == 1
+    assert second_batch.num_columns == 5
+    assert second_batch.column(0).to_pylist() == [2]
+    assert second_batch.column(1).to_pylist() == ["John"]
+    assert second_batch.column(2).to_pylist() == ["Locke"]
+    assert second_batch.column(3).to_pylist() == [65]
+    assert second_batch.column(4).to_pylist() == [1]
+    third_batch = record_batch_reader.read_next_batch()
+    assert third_batch.num_rows == 1
+    assert third_batch.num_columns == 5
+    assert third_batch.column(0).to_pylist() == [3]
+    assert third_batch.column(1).to_pylist() == ["Kate"]
+    assert third_batch.column(2).to_pylist() == ["Austen"]
+    assert third_batch.column(3).to_pylist() == [37]
+    assert third_batch.column(4).to_pylist() == [2]
+    fourth_batch = record_batch_reader.read_next_batch()
+    assert fourth_batch.num_rows == 1
+    assert fourth_batch.num_columns == 5
+    assert fourth_batch.column(0).to_pylist() == [4]
+    assert fourth_batch.column(1).to_pylist() == ["Claire"]
+    assert fourth_batch.column(2).to_pylist() == ["Littleton"]
+    assert fourth_batch.column(3).to_pylist() == [27]
+    assert fourth_batch.column(4).to_pylist() == [2]
+    fifth_batch = record_batch_reader.read_next_batch()
+    assert fifth_batch.num_rows == 1
+    assert fifth_batch.num_columns == 5
+    assert fifth_batch.column(0).to_pylist() == [5]
+    assert fifth_batch.column(1).to_pylist() == ["Hugo"]
+    assert fifth_batch.column(2).to_pylist() == ["Reyes"]
+    assert fifth_batch.column(3).to_pylist() == [29]
+    assert fifth_batch.column(4).to_pylist() == [100]
+    with pytest.raises(StopIteration):
+        record_batch_reader.read_next_batch()
+
+
+def test_explain(hardcharger_employee: DuckDBDataFrame, capsys):
+    hardcharger_employee.explain()
+    assert (
+        capsys.readouterr().out.strip()
+        == """
+┌───────────────────────────┐
+│      COLUMN_DATA_SCAN     │
+│    ────────────────────   │
+│          ~5 rows          │
+└───────────────────────────┘
+""".strip()
+    )
+
+
+def test_duplicate_cte(hardcharger_session: DuckDBSession):
+    con = hardcharger_session._conn
+
+    con.execute("CREATE VIEW foo AS SELECT 'a' as key, 1 as idx")
+    con.execute("CREATE VIEW bar AS SELECT 'b' as key, 2 as smth")
+
+    foo = hardcharger_session.table("foo").filter(F.col("idx") == 1)
+    bar = hardcharger_session.table("bar").filter(F.col("smth") == 2)
+
+    df = foo.join(bar, "key", "left")
+
+    df = df.unionByName(df)
+
+    results = hardcharger_session._collect(expressions=df._get_expressions(optimize=True))
+    assert results == [
+        types.Row(key="a", idx=1, smth=None),
+        types.Row(key="a", idx=1, smth=None),
+    ]
+
+
+# https://github.com/eakmanrq/sqlframe/issues/512
+def test_select_star_join_with_external_tables(hardcharger_session: DuckDBSession):
+    con = hardcharger_session._conn
+
+    con.execute("CREATE TABLE t1 AS SELECT 1 AS id, 'a' AS val")
+    con.execute("CREATE TABLE t2 AS SELECT 1 AS id, 'b' AS other")
+
+    left = hardcharger_session.sql("SELECT * FROM t1").filter(F.col("val") == "a").select("id", "val")
+    right = hardcharger_session.sql("SELECT * FROM t2").select("id")
+
+    result = left.join(right, "id", "leftanti")
+    assert result.count() == 0
+
+
+# https://github.com/eakmanrq/sqlframe/issues/553
+def test_special_characters_in_column_names(hardcharger_session: DuckDBSession):
+    con = hardcharger_session._conn
+    con.execute(
+        """CREATE VIEW special_cols AS SELECT 'a' AS "'ABC'", 'b' AS "Map_CD1_%", 'c' AS "\u2018ABC\u2019" """
+    )
+
+    df = hardcharger_session.table("special_cols")
+
+    # Verify schema works without BinderException
+    schema = df.schema
+    assert len(schema.fields) == 3
+    field_names = [f.name for f in schema.fields]
+    assert field_names == ["`'abc'`", "`map_cd1_%`", "\u2018abc\u2019"]
+
+    # Verify collect works - Row keys preserve original case from cursor description
+    result = df.collect()
+    assert len(result) == 1
+    assert result[0]["'ABC'"] == "a"
+    assert result[0]["Map_CD1_%"] == "b"
+    assert result[0]["\u2018ABC\u2019"] == "c"
+
+
+# https://github.com/eakmanrq/sqlframe/issues/557
+def test_dict_rows_missing_columns(hardcharger_session: DuckDBSession):
+    df = hardcharger_session.createDataFrame(
+        [{"name": "xxx"}, {"name": "yyy"}],
+        schema={"_id": "varchar", "name": "varchar"},
+    )
+    result = df.collect()
+    assert len(result) == 2
+    assert result[0]["_id"] is None
+    assert result[0]["name"] == "xxx"
+    assert result[1]["_id"] is None
+    assert result[1]["name"] == "yyy"

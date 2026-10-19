@@ -1,0 +1,201 @@
+name: ci
+
+# Every check, on every push to main and every pull request; also the gate in front of a
+# release (release.yml calls this workflow on the tagged commit):
+#   - driver: a wheel of adbc-driver-hardcharger (internal, not on PyPI) at HARDCHARGER_ADBC_REF;
+#   - lint: ruff check, ruff format --check and mypy;
+#   - unit: tests/unit on Python 3.11 to 3.14;
+#   - live: this package's integration tests and SQLFrame's engine suite against a real
+#     hardcharger-server from HARDCHARGER_IMAGE, on Python 3.11 and 3.14, and once with the
+#     lowest versions pyproject.toml allows. They FAIL without a server; nothing skips for that.
+#   - readme: every Python example in README.md, run as written against a live server;
+#   - build: the sdist and wheel.
+#
+# Access while Hardcharger is internal, with no personal token:
+#   - ghcr.io/gizmodata/hardcharger, pulled with this workflow's GITHUB_TOKEN: the package grants
+#     this repository read access (package settings, Manage Actions access);
+#   - gizmodata/hardcharger-adbc and gizmodata/warp-sql-adbc (the driver and the Go module it is
+#     built on), each through a read-only deploy key of that repository, kept here as the
+#     DEPLOY_KEY_HARDCHARGER_ADBC and DEPLOY_KEY_WARP_SQL_ADBC secrets.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: read
+
+# "ci-" keeps this group apart from release.yml's when release calls this workflow: there
+# github.workflow is the caller's name, and a called workflow in its caller's group deadlocks.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  # The server the live tests run against: Hardcharger's main branch, which its CI publishes on
+  # every green push. Pin a :sha-<short> tag here to reproduce an old run.
+  HARDCHARGER_IMAGE: ghcr.io/gizmodata/hardcharger:main
+  # gizmodata/hardcharger-adbc main, 2026-10-18 (client certificate sign-in, adbc-driver-hardcharger 0.1.0).
+  HARDCHARGER_ADBC_REF: 9a087bed2bc4ed3b514624c20228e705eaa65355
+
+jobs:
+  driver:
+    name: adbc-driver-hardcharger wheel
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - uses: ./.github/actions/hardcharger-driver
+        with:
+          ref: ${{ env.HARDCHARGER_ADBC_REF }}
+          hardcharger-adbc-deploy-key: ${{ secrets.DEPLOY_KEY_HARDCHARGER_ADBC }}
+          warp-sql-adbc-deploy-key: ${{ secrets.DEPLOY_KEY_WARP_SQL_ADBC }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: driver-wheel
+          path: dist-driver/*.whl
+          retention-days: 7
+
+  lint:
+    name: ruff and mypy
+    needs: driver
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: driver-wheel
+          path: dist-driver
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: |
+          uv venv .venv --python 3.14
+          uv pip install --python .venv/bin/python dist-driver/*.whl -e ".[dev]"
+      - name: ruff check
+        run: .venv/bin/ruff check .
+      - name: ruff format --check
+        run: .venv/bin/ruff format --check .
+      - name: mypy
+        run: .venv/bin/mypy
+
+  unit:
+    name: unit tests (Python ${{ matrix.python }})
+    needs: driver
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: driver-wheel
+          path: dist-driver
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          uv venv .venv --python "${{ matrix.python }}"
+          uv pip install --python .venv/bin/python dist-driver/*.whl -e ".[dev]"
+      - name: Unit tests
+        run: .venv/bin/python -m pytest tests/unit
+
+  live:
+    name: live tests (Python ${{ matrix.python }}, ${{ matrix.resolution }} dependencies)
+    needs: driver
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.11"
+            resolution: highest
+          - python: "3.14"
+            resolution: highest
+          # Every direct dependency at its floor in pyproject.toml, so the floors stay true.
+          - python: "3.11"
+            resolution: lowest-direct
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: driver-wheel
+          path: dist-driver
+      - uses: ./.github/actions/hardcharger-server
+        with:
+          image: ${{ env.HARDCHARGER_IMAGE }}
+          token: ${{ github.token }}
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          uv venv .venv --python "${{ matrix.python }}"
+          uv pip install --python .venv/bin/python --resolution "${{ matrix.resolution }}" \
+            dist-driver/*.whl -e ".[dev]"
+          uv pip list --python .venv/bin/python | grep -E -i '^(sqlframe|sqlglot|pyarrow|adbc|pandas|pytest) '
+      # Unit tests too, so the lowest-dependency run covers them.
+      - name: Tests (unit, integration, SQLFrame engine suite)
+        run: .venv/bin/python -m pytest -n 4
+
+  readme:
+    name: README examples
+    needs: driver
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: driver-wheel
+          path: dist-driver
+      - uses: ./.github/actions/hardcharger-server
+        with:
+          image: ${{ env.HARDCHARGER_IMAGE }}
+          token: ${{ github.token }}
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: |
+          uv venv .venv --python 3.14
+          uv pip install --python .venv/bin/python dist-driver/*.whl -e ".[dev]"
+      - name: Every Python block of README.md, against a server on port 31337
+        run: .venv/bin/python scripts/run_readme_examples.py
+
+  build:
+    name: sdist and wheel
+    needs: [lint, unit, live, readme]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Build and check
+        run: |
+          uv build --out-dir dist
+          uvx twine check --strict dist/*
+          # The published metadata names the PyPI package and its driver.
+          meta=$(unzip -p dist/*.whl '*.dist-info/METADATA')
+          grep -qx 'Name: sqlframe-hardcharger' <<<"$meta"
+          grep -q '^Requires-Dist: adbc-driver-hardcharger' <<<"$meta"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

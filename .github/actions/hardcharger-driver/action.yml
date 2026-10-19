@@ -1,0 +1,72 @@
+name: adbc-driver-hardcharger from source
+description: >
+  Builds a wheel of adbc-driver-hardcharger (gizmodata/hardcharger-adbc, internal, not on PyPI)
+  at a pinned commit, with its Go library, into dist-driver/. The repository and the Go module
+  it needs (gizmodata/warp-sql-adbc, internal) are read over SSH with read-only deploy keys of
+  each; no personal token.
+inputs:
+  ref:
+    description: The hardcharger-adbc commit to build
+    required: true
+  hardcharger-adbc-deploy-key:
+    description: The DEPLOY_KEY_HARDCHARGER_ADBC secret (private key of a read-only deploy key)
+    required: true
+  warp-sql-adbc-deploy-key:
+    description: The DEPLOY_KEY_WARP_SQL_ADBC secret (private key of a read-only deploy key)
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Deploy keys
+      shell: bash
+      env:
+        DEPLOY_KEY_HARDCHARGER_ADBC: ${{ inputs.hardcharger-adbc-deploy-key }}
+        DEPLOY_KEY_WARP_SQL_ADBC: ${{ inputs.warp-sql-adbc-deploy-key }}
+      run: |
+        set -euo pipefail
+        # One SSH host alias per repository, each with its own key, and git rewrites every
+        # spelling of that repository's URL to its alias (Go's module fetch goes through it too).
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+        for repo in hardcharger-adbc warp-sql-adbc; do
+          var="DEPLOY_KEY_$(echo "$repo" | tr 'a-z-' 'A-Z_')"
+          key="${!var}"
+          if [ -z "$key" ]; then
+            echo "::error::the $var secret is not set: the private key of a read-only deploy key of gizmodata/$repo"
+            exit 1
+          fi
+          printf '%s\n' "$key" > ~/.ssh/"$repo" && chmod 600 ~/.ssh/"$repo"
+          printf 'Host github.com-%s\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/%s\n  IdentitiesOnly yes\n' "$repo" "$repo" >> ~/.ssh/config
+          for from in "https://github.com/gizmodata/$repo" "ssh://git@github.com/gizmodata/$repo" "git@github.com:gizmodata/$repo"; do
+            git config --global --add url."git@github.com-$repo:gizmodata/$repo".insteadOf "$from"
+          done
+        done
+        echo "GOPRIVATE=github.com/gizmodata/*" >> "$GITHUB_ENV"
+    - name: hardcharger-adbc at ${{ inputs.ref }}
+      shell: bash
+      env:
+        REF: ${{ inputs.ref }}
+      run: |
+        set -euo pipefail
+        src="$RUNNER_TEMP/hardcharger-adbc"
+        git init -q "$src"
+        git -C "$src" remote add origin https://github.com/gizmodata/hardcharger-adbc
+        git -C "$src" fetch -q --depth 1 origin "$REF"
+        git -C "$src" checkout -q FETCH_HEAD
+        test "$(git -C "$src" rev-parse HEAD)" = "$REF"
+        echo "HARDCHARGER_ADBC_SRC=$src" >> "$GITHUB_ENV"
+    - uses: actions/setup-go@v7
+      with:
+        go-version-file: ${{ runner.temp }}/hardcharger-adbc/go/go.mod
+        cache: false
+    - name: Library and wheel
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "$HARDCHARGER_ADBC_SRC/go"
+        CGO_ENABLED=1 go build -tags driverlib -buildmode=c-shared \
+          -o ../python/src/adbc_driver_hardcharger/libadbc_driver_hardcharger.so ./pkg/hardcharger
+        cd "$GITHUB_WORKSPACE"
+        python -m pip install -q build
+        python -m build --wheel --outdir dist-driver "$HARDCHARGER_ADBC_SRC/python"
+        ls -la dist-driver

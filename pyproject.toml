@@ -1,0 +1,106 @@
+[build-system]
+requires = ["hatchling>=1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sqlframe-hardcharger"
+version = "0.1.0"
+description = "Hardcharger™ backend for SQLFrame: run PySpark DataFrame code on a Hardcharger server, no Spark cluster"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"  # pyarrow 26 needs 3.11
+authors = [
+    { name = "GizmoData", email = "support@gizmodata.com" },
+]
+keywords = [
+    "sqlframe",
+    "hardcharger",
+    "warp-sql",
+    "duckdb",
+    "arrow",
+    "adbc",
+    "dataframe",
+    "pyspark",
+    "sql",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "sqlframe>=4.5.0",
+    "sqlglot>=30.22.0",
+    "adbc-driver-hardcharger>=0.1.0",
+    "pyarrow>=26.0.0",
+]
+
+[project.optional-dependencies]
+pandas = ["pandas>=3.0.6"]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.17.1",
+    "mypy>=2.4.0",
+    "pandas>=3.0.6",
+    "pandas-stubs>=3.0.5.260914",
+    "pytz>=2026.5",
+    "cryptography>=50.0.2",
+    "pyjwt>=2.15.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/gizmodata/sqlframe-hardcharger"
+Repository = "https://github.com/gizmodata/sqlframe-hardcharger"
+Changelog = "https://github.com/gizmodata/sqlframe-hardcharger/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sqlframe_hardcharger"]
+
+[tool.hatch.build.targets.sdist]
+include = ["sqlframe_hardcharger", "README.md", "CHANGELOG.md", "LICENSE"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+# Keep PySpark-idiomatic backslash-continuation examples in docs untouched
+# (ruff otherwise formats Python code blocks inside Markdown), and leave the
+# vendored SQLFrame suite as upstream wrote it (see tests/sqlframe_suite).
+extend-exclude = ["*.md", "tests/sqlframe_suite/upstream"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501", "F403"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sqlframe_hardcharger"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["sqlframe_hardcharger"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["adbc_driver_hardcharger.*", "adbc_driver_manager.*", "pyarrow.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-ra"
+markers = [
+    "integration: runs against a live hardcharger-server (SQLFRAME_HARDCHARGER_TEST_SERVER_BINARY); fails, never skips, without one",
+    "hardcharger: SQLFrame's engine suite, parametrized for the Hardcharger engine",
+]
