@@ -149,6 +149,9 @@ def hardcharger_connection(hc_connect_kwargs) -> t.Iterator[HardchargerConnectio
     with HardchargerConnection(**hc_connect_kwargs) as conn:
         with conn.cursor() as cursor:
             reset_database(cursor=cursor)
+            # Set the zone on this session explicitly rather than trusting the server's default
+            # (CI's server reports 'Etc/UTC', the same zone under another name).
+            cursor.execute("SET SESSION TimeZone = 'UTC'")
             cursor.execute("SELECT current_setting('TimeZone')")
             assert cursor.fetchone() == ("UTC",)
         yield conn
