@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Changed
+
+- Browser sign-in (`hardcharger.auth_type` = `external`) runs on the server's own port (Warp SQL
+  protocol 1.0.0, spec §4.3): the `hardcharger.oauth_url` and `hardcharger.oauth_port` options are
+  gone, with `adbc-driver-hardcharger`'s. `oauth_timeout` and `open_browser` stay.
+- The driver is built from hardcharger-adbc `13f4eb4` (Warp SQL 1.0.0, on warp-sql-adbc `a81c326`;
+  was `9a087be`), tested against `hardcharger-server` 2.0.0-rc.1. SQL errors from it are
+  `ProgrammingError`, not `InternalError`; a plain-HTTP server reached with TLS says so.
+- The live tests start browser sign-in servers with `--oauth-base-url`; the mock identity
+  provider has an authorization endpoint (PKCE S256, nonce, one-time codes) and the stand-in
+  browser follows its redirect, as a browser does.
+- `test_array_distinct` from SQLFrame's suite is marked platform-dependent: DuckDB 2.0's
+  `list_distinct` returns elements in hash order, which differs between macOS and Linux.
+
 ### Documentation
 
 - The README banner is the new Hardcharger™ logo, the bull mascot lockup in a light and a dark

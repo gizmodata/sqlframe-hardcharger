@@ -78,11 +78,11 @@ KNOWN_FAILURES: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
     "test_first_value": (
         "sqlframe 4.5.0 with pandas 3: a str column's missing values become NaN floats in "
         "createDataFrame()'s VALUES list; fails the same way on in-process DuckDB 1.5",
-        adbc_driver_manager.InternalError,
+        adbc_driver_manager.ProgrammingError,
     ),
     "test_last_value": (
         "sqlframe 4.5.0 with pandas 3 (see test_first_value)",
-        adbc_driver_manager.InternalError,
+        adbc_driver_manager.ProgrammingError,
     ),
     "test_explain": (
         "DuckDB 2.0 draws EXPLAIN plans differently (rounded boxes) from the DuckDB 1.x text upstream expects",
@@ -110,12 +110,29 @@ KNOWN_FAILURES: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
 }
 
 
+# Upstream tests that pass or fail depending on the platform the server runs on: not strict, but
+# when one fails it must fail the way described.
+PLATFORM_DEPENDENT: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
+    "test_array_distinct": (
+        "DuckDB 2.0's list_distinct returns the distinct elements in hash order, which differs by "
+        "platform: on macOS array_distinct([1, 2, 3, 2]) is [2, 3, 1], on Linux [1, 2, 3]; upstream "
+        "accepts only [1, 2, 3] or [3, 2, 1]",
+        AssertionError,
+    ),
+}
+
+
 def pytest_collection_modifyitems(items):
     suite = Path(__file__).resolve().parent
     for item in items:
-        if suite in Path(item.path).resolve().parents and item.originalname in KNOWN_FAILURES:
+        if suite not in Path(item.path).resolve().parents:
+            continue
+        if item.originalname in KNOWN_FAILURES:
             reason, raises = KNOWN_FAILURES[item.originalname]
             item.add_marker(pytest.mark.xfail(reason=reason, raises=raises, strict=True))
+        elif item.originalname in PLATFORM_DEPENDENT:
+            reason, raises = PLATFORM_DEPENDENT[item.originalname]
+            item.add_marker(pytest.mark.xfail(reason=reason, raises=raises, strict=False))
 
 
 @pytest.fixture(autouse=True)

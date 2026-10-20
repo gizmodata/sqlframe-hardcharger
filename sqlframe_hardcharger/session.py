@@ -61,8 +61,6 @@ CONNECT_OPTIONS: t.Tuple[str, ...] = (
     "password",
     "access_token",
     "auth_type",
-    "oauth_url",
-    "oauth_port",
     "oauth_timeout",
     "open_browser",
     "session_tag",
@@ -432,8 +430,6 @@ class HardchargerSession(
                 self._hardcharger_connect_kwargs.pop(name, None)
             elif name == "tls_skip_verify":
                 self._hardcharger_connect_kwargs[name] = str(value).lower() in ("true", "1")
-            elif name == "oauth_port":
-                self._hardcharger_connect_kwargs[name] = int(value)
             elif name == "oauth_timeout":
                 self._hardcharger_connect_kwargs[name] = float(value)
             else:

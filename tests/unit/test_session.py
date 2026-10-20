@@ -85,7 +85,6 @@ def test_client_certificate_and_oauth_options_pass_through():
             .config("hardcharger.auth_type", "client_certificate")
             .config("hardcharger.tls_client_cert", "client.pem")
             .config("hardcharger.tls_client_key", "client-key.pem")
-            .config("hardcharger.oauth_port", "31339")
             .config("hardcharger.oauth_timeout", "30")
         )
     )
@@ -94,7 +93,6 @@ def test_client_certificate_and_oauth_options_pass_through():
         "auth_type": "client_certificate",
         "tls_client_cert": "client.pem",
         "tls_client_key": "client-key.pem",
-        "oauth_port": 31339,
         "oauth_timeout": 30.0,
     }
 

@@ -128,7 +128,7 @@ argument of `activate()`. They are the keyword arguments of
 | `hardcharger.tls_root_certs` | CA certificates to trust (PEM text or a file path) instead of the system's |
 | `hardcharger.tls_skip_verify` | Don't verify the server's certificate (development only) |
 | `hardcharger.tls_client_cert`, `hardcharger.tls_client_key` | Client certificate and key, for mutual TLS |
-| `hardcharger.oauth_url`, `hardcharger.oauth_port`, `hardcharger.oauth_timeout`, `hardcharger.open_browser` | Browser sign-in: where the server's sign-in page is, how long to wait, how to open the browser |
+| `hardcharger.oauth_timeout`, `hardcharger.open_browser` | Browser sign-in: how long to wait, how to open the browser |
 | `hardcharger.session_tag`, `hardcharger.query_tag` | JSON objects the server records with the session and its statements |
 | `hardcharger.settings` | `hardcharger.*` session settings, e.g. `{"query_timeout": 60}` |
 | `hardcharger.catalog`, `hardcharger.db_schema` | The session's current catalog and schema |
@@ -166,7 +166,8 @@ spark.sql("SELECT HARDCHARGER_USER() AS signed_in_as").show()
 ```
 
 Browser sign-in (`hardcharger.auth_type` = `external`) opens the server's sign-in page (a server
-started with `--oauth-client-id`) and waits for you to finish there.
+started with `--oauth-client-id`; the sign-in runs on the server's own port) and waits for you to
+finish there.
 
 A session is a process-wide singleton, as in SQLFrame: once one exists, `getOrCreate()` returns it
 until you call `spark.stop()`.

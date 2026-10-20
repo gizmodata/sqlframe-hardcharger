@@ -14,7 +14,6 @@ from sqlframe.base.session import _BaseSession
 from tests.hardcharger_server import (
     ADMIN_CERT_IDENTITY,
     USERNAME,
-    free_port,
     start_server,
     stop_server,
 )
@@ -74,7 +73,9 @@ class TestTls:
         """TLS is verified by default: a server whose CA the client doesn't trust is refused."""
         with pytest.raises(Exception) as excinfo:
             make_session(uri=hc_server.uri, username=USERNAME, password=hc_server.password)
-        assert "certificate signed by unknown authority" in str(excinfo.value)
+        # Go's wording: Linux (CI), macOS.
+        reasons = ("certificate signed by unknown authority", "certificate is not trusted")
+        assert any(reason in str(excinfo.value) for reason in reasons), str(excinfo.value)
 
     def test_tls_skip_verify(self, make_session, hc_server):
         session = make_session(uri=hc_server.uri, username=USERNAME, password=hc_server.password, tls_skip_verify=True)
@@ -185,10 +186,8 @@ def idp_issuer():
 
 @pytest.fixture(scope="module")
 def oauth_server(tmp_path_factory, idp_issuer):
-    oauth_port = free_port()
     server = start_server(
         workdir=tmp_path_factory.mktemp("oauth"),
-        oauth_port=oauth_port,
         extra_args=[
             "--token-allowed-issuer",
             idp_issuer,
@@ -202,8 +201,10 @@ def oauth_server(tmp_path_factory, idp_issuer):
             CLIENT_ID,
             "--oauth-client-secret",
             CLIENT_SECRET,
-            "--oauth-port",
-            str(oauth_port),
+            # Browser sign-in runs on the server's own port (Warp SQL §4.3); the redirect URI
+            # names 127.0.0.1, where the tests dial it.
+            "--oauth-base-url",
+            "{base_url}",
         ],
     )
     yield server
@@ -211,7 +212,8 @@ def oauth_server(tmp_path_factory, idp_issuer):
 
 
 def fake_browser(code: str) -> str:
-    """The command the driver opens the sign-in URL with: hands ``code`` to the server's callback."""
+    """The command the driver opens the sign-in URL with: the identity provider sends it back to the
+    server's callback with ``code``."""
     return f"{sys.executable} {OAUTH_DIR / 'fake_browser.py'} {code}"
 
 
@@ -220,7 +222,6 @@ class TestBrowserSignIn:
         session = make_session(
             uri=oauth_server.uri,
             auth_type="external",
-            oauth_port=oauth_server.oauth_port,
             open_browser=fake_browser(code="code-ok"),
             oauth_timeout=30,
         )
@@ -232,7 +233,6 @@ class TestBrowserSignIn:
             make_session(
                 uri=oauth_server.uri,
                 auth_type="external",
-                oauth_port=oauth_server.oauth_port,
                 open_browser=fake_browser(code="code-bad"),
                 oauth_timeout=30,
             )

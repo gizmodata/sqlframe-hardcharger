@@ -44,7 +44,6 @@ class Server:
     log: Path
     tls: bool = False
     ca: Path | None = None
-    oauth_port: int | None = None
     username: str = USERNAME
 
     @property
@@ -135,7 +134,6 @@ def start_server(
     workdir: Path,
     extra_args: list[str] | None = None,
     certs: dict[str, Path] | None = None,
-    oauth_port: int | None = None,
     port: int | None = None,
     username: str = USERNAME,
     password: str | None = None,
@@ -145,10 +143,13 @@ def start_server(
 
     With ``certs`` (from :func:`make_certificates`) it serves TLS with that server certificate,
     verifies client certificates against the same CA (optional ones), and offers certificate
-    sign-in, where ``admin_cert_identity`` signs in as the administrator.
+    sign-in, where ``admin_cert_identity`` signs in as the administrator. ``{base_url}`` in an
+    extra argument becomes the server's own base URL (at 127.0.0.1).
     """
     binary = server_binary()
-    args = list(extra_args or [])
+    port = port or free_port()
+    scheme = "https" if certs is not None or "--tls-cert" in (extra_args or []) else "http"
+    args = [arg.replace("{base_url}", f"{scheme}://127.0.0.1:{port}") for arg in extra_args or []]
     if certs is not None:
         args += [
             "--tls-cert",
@@ -164,7 +165,6 @@ def start_server(
             admin_cert_identity,
         ]
     workdir.mkdir(parents=True, exist_ok=True)
-    port = port or free_port()
     password = password or secrets.token_urlsafe(nbytes=12) + ":p@ss:word"
     log = workdir / "hardcharger-server.log"
     with log.open(mode="ab") as out:
@@ -200,7 +200,6 @@ def start_server(
         log=log,
         tls=certs is not None or "--tls-cert" in args,
         ca=None if certs is None else certs["ca"],
-        oauth_port=oauth_port,
         username=username,
     )
     _wait_up(server=server)

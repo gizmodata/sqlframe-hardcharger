@@ -50,7 +50,7 @@ def activate(
         ``auth_type`` (``"password"``, ``"external"`` for the server's browser
         sign-in, or ``"client_certificate"``), ``tls_root_certs``,
         ``tls_skip_verify``, ``tls_client_cert``/``tls_client_key``,
-        ``oauth_url``/``oauth_port``/``oauth_timeout``/``open_browser``,
+        ``oauth_timeout``/``open_browser``,
         ``session_tag``/``query_tag``, ``settings``, ``catalog``/``db_schema``,
         ``db_kwargs``/``conn_kwargs``.
 

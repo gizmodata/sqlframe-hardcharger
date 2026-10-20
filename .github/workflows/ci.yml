@@ -40,7 +40,7 @@ env:
   # every green push. Pin a :sha-<short> tag here to reproduce an old run.
   HARDCHARGER_IMAGE: ghcr.io/gizmodata/hardcharger:main
   # gizmodata/hardcharger-adbc main, 2026-10-18 (client certificate sign-in, adbc-driver-hardcharger 0.1.0).
-  HARDCHARGER_ADBC_REF: 9a087bed2bc4ed3b514624c20228e705eaa65355
+  HARDCHARGER_ADBC_REF: 13f4eb49156a5385173d836aa61cd70ad0662d69
 
 jobs:
   driver:
