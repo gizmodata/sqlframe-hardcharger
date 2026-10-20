@@ -15,6 +15,14 @@ never published.
 
 ### Changed
 
+- `release.yml` publishes to PyPI through trusted publishing (the `pypi` environment, after an
+  approval on the `release` environment) before creating the GitHub Release. The build refuses
+  to go on while the `adbc-driver-hardcharger` floor in `pyproject.toml` is not on PyPI, and
+  checks that the wheel depends on the driver by that plain floor, never by CI's git pin.
+- The repository's public files: NOTICE (naming sqlframe-gizmosql as the origin),
+  CONTRIBUTING.md with the Developer Certificate of Origin sign-off, SECURITY.md,
+  CODE_OF_CONDUCT.md, and the LICENSE copyright line.
+
 - Browser sign-in (`hardcharger.auth_type` = `external`) runs on the server's own port (Warp SQL
   protocol 1.0.0, spec §4.3): the `hardcharger.oauth_url` and `hardcharger.oauth_port` options are
   gone, with `adbc-driver-hardcharger`'s. `oauth_timeout` and `open_browser` stay.
