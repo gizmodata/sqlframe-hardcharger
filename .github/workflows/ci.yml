@@ -2,7 +2,7 @@ name: ci
 
 # Every check, on every push to main and every pull request; also the gate in front of a
 # release (release.yml calls this workflow on the tagged commit):
-#   - driver: a wheel of adbc-driver-hardcharger (internal, not on PyPI) at HARDCHARGER_ADBC_REF;
+#   - driver: a wheel of adbc-driver-hardcharger, built at HARDCHARGER_ADBC_REF until it is on PyPI;
 #   - lint: ruff check, ruff format --check and mypy;
 #   - unit: tests/unit on Python 3.11 to 3.14;
 #   - live: this package's integration tests and SQLFrame's engine suite against a real
@@ -11,7 +11,8 @@ name: ci
 #   - readme: every Python example in README.md, run as written against a live server;
 #   - build: the sdist and wheel.
 #
-# Access while Hardcharger is internal, with no personal token:
+# Access while the Hardcharger repositories and image are private, with no personal token (once they
+# are public, and the driver is on PyPI, none of this is needed):
 #   - ghcr.io/gizmodata/hardcharger, pulled with this workflow's GITHUB_TOKEN: the package grants
 #     this repository read access (package settings, Manage Actions access);
 #   - gizmodata/hardcharger-adbc and gizmodata/warp-sql-adbc (the driver and the Go module it is

@@ -1,13 +1,12 @@
 # CLAUDE.md: sqlframe-hardcharger
 
 The Hardcharger™ backend for [SQLFrame](https://github.com/eakmanrq/sqlframe) (PySpark DataFrame
-API on SQL engines), ported from gizmodata/sqlframe-gizmosql. Hardcharger is not announced:
-this repository is internal, nothing is published to PyPI, and no tag is pushed without
-Philip's go-ahead. Never push Hardcharger work to the public sqlframe-gizmosql repository.
+API on SQL engines), ported from gizmodata/sqlframe-gizmosql. A release tag is pushed only with
+Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql repository.
 
 ## Architecture
 
-- **Driver**: `adbc-driver-hardcharger` (gizmodata/hardcharger-adbc, internal, not on PyPI):
+- **Driver**: `adbc-driver-hardcharger` (gizmodata/hardcharger-adbc; until it is on PyPI, CI builds it):
   `hardcharger://` URIs (HTTPS, port 31337), Warp SQL over HTTP. `connect.py` wraps its DB-API
   connection: `HardchargerConnection(**connect_kwargs)` takes `dbapi.connect()`'s keyword
   arguments; `HardchargerAdbcCursor` proxies an explicit list of cursor methods (add a method

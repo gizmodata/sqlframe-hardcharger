@@ -301,7 +301,7 @@ collector (`OTEL_EXPORTER_OTLP_ENDPOINT`).
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[dev]"            # plus adbc-driver-hardcharger, built from its repository
+pip install -e ".[dev]"            # plus adbc-driver-hardcharger from PyPI, or built from its repository
 ruff check . && ruff format --check . && mypy
 pytest tests/unit
 SQLFRAME_HARDCHARGER_TEST_SERVER_BINARY=/path/to/hardcharger-server pytest -n 4

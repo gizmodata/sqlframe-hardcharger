@@ -1,8 +1,8 @@
 name: adbc-driver-hardcharger from source
 description: >
-  Builds a wheel of adbc-driver-hardcharger (gizmodata/hardcharger-adbc, internal, not on PyPI)
+  Builds a wheel of adbc-driver-hardcharger (gizmodata/hardcharger-adbc; until it is on PyPI)
   at a pinned commit, with its Go library, into dist-driver/. The repository and the Go module
-  it needs (gizmodata/warp-sql-adbc, internal) are read over SSH with read-only deploy keys of
+  it needs (gizmodata/warp-sql-adbc) are read over SSH with read-only deploy keys of
   each; no personal token.
 inputs:
   ref:
