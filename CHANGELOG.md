@@ -6,12 +6,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-10-20
+## [2.0.0] - 2026-10-21
 
 ### Changed
 - Require the released Hardcharger ADBC 2.0.0 driver and test the final driver implementation.
-
-<!-- Set the date above at tag time. -->
 
 The first release. Its version follows the Hardcharger server's (2.0.0); 0.1.0 below was built but
 never published.
