@@ -40,8 +40,8 @@ env:
   # The server the live tests run against: Hardcharger's main branch, which its CI publishes on
   # every green push. Pin a :sha-<short> tag here to reproduce an old run.
   HARDCHARGER_IMAGE: ghcr.io/gizmodata/hardcharger:main
-  # gizmodata/hardcharger-adbc main, 2026-10-18 (client certificate sign-in, adbc-driver-hardcharger 0.1.0).
-  HARDCHARGER_ADBC_REF: 13f4eb49156a5385173d836aa61cd70ad0662d69
+  # Final Hardcharger ADBC 2.0.0 implementation (session handoff, profiles and authority isolation).
+  HARDCHARGER_ADBC_REF: 5c5d99927bb5900ea312ed2ce4cb98b96bb85410
 
 jobs:
   driver:

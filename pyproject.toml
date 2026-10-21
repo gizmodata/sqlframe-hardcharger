@@ -25,7 +25,7 @@ keywords = [
     "sql",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -39,7 +39,7 @@ classifiers = [
 dependencies = [
     "sqlframe>=4.5.0",
     "sqlglot>=30.22.0",
-    "adbc-driver-hardcharger>=0.1.0",
+    "adbc-driver-hardcharger>=2.0.0",
     "pyarrow>=26.0.0",
 ]
 
