@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sqlframe-hardcharger"
-version = "2.0.0"
+version = "2.0.1"
 description = "Hardcharger™ backend for SQLFrame: run PySpark DataFrame code on a Hardcharger server, no Spark cluster"
 readme = "README.md"
 license = "Apache-2.0"

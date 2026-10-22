@@ -1,13 +1,14 @@
 <p align="center">
   <a href="https://github.com/gizmodata/sqlframe-hardcharger">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hardcharger-banner-dark.png">
-      <img src="docs/assets/hardcharger-banner-light.png" alt="Hardcharger™" width="400">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gizmodata/sqlframe-hardcharger/main/docs/assets/hardcharger-banner-dark.png">
+      <img src="https://raw.githubusercontent.com/gizmodata/sqlframe-hardcharger/main/docs/assets/hardcharger-banner-light.png" alt="Hardcharger™" width="400">
     </picture>
   </a>
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pepy/dt/sqlframe-hardcharger.svg" alt="PyPI Downloads"></a>
   <a href="https://github.com/gizmodata/sqlframe-hardcharger/actions/workflows/ci.yml"><img src="https://github.com/gizmodata/sqlframe-hardcharger/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/badge/PyPI-sqlframe--hardcharger-blue.svg?logo=PyPI" alt="PyPI"></a>
   <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-3776AB.svg?logo=python&logoColor=white" alt="Python 3.11 to 3.14">
@@ -15,7 +16,7 @@
   <a href="https://github.com/gizmodata/hardcharger-adbc"><img src="https://img.shields.io/badge/driver-adbc--driver--hardcharger-f15a24.svg" alt="adbc-driver-hardcharger"></a>
   <a href="https://github.com/gizmodata/warp-sql"><img src="https://img.shields.io/badge/protocol-Warp%20SQL-31a8db.svg" alt="Warp SQL protocol"></a>
   <a href="https://github.com/gizmodata/hardcharger"><img src="https://img.shields.io/badge/server-Hardcharger-f15a24.svg" alt="Hardcharger"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg" alt="Apache 2.0 license"></a>
+  <a href="https://github.com/gizmodata/sqlframe-hardcharger/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg" alt="Apache 2.0 license"></a>
   <a href="https://gizmodata.com"><img src="https://img.shields.io/badge/by-GizmoData%E2%84%A2-f15a24.svg" alt="GizmoData™"></a>
 </p>
 
@@ -317,19 +318,19 @@ runs it against DuckDB). Every Python block in this README runs against a live s
 
 ## 📦 Releasing
 
-[Semantic versioning](https://semver.org) and [CHANGELOG.md](CHANGELOG.md). Pushing a `vX.Y.Z`
+[Semantic versioning](https://semver.org) and [CHANGELOG.md](https://github.com/gizmodata/sqlframe-hardcharger/blob/main/CHANGELOG.md). Pushing a `vX.Y.Z`
 tag runs the full CI on the tagged commit, then builds the wheel and sdist and makes a GitHub
 Release with the tag's CHANGELOG section.
 
 ## 📄 License
 
-Apache License 2.0; see [LICENSE](LICENSE). SQLFrame's engine tests in
+Apache License 2.0; see [LICENSE](https://github.com/gizmodata/sqlframe-hardcharger/blob/main/LICENSE). SQLFrame's engine tests in
 `tests/sqlframe_suite/upstream` are MIT-licensed (see the LICENSE file there).
 
 ---
 
 <p align="center">
-  <a href="https://gizmodata.com"><img src="docs/assets/gizmodata-logo.png" alt="GizmoData™" width="56"></a><br>
+  <a href="https://gizmodata.com"><img src="https://raw.githubusercontent.com/gizmodata/sqlframe-hardcharger/main/docs/assets/gizmodata-logo.png" alt="GizmoData™" width="56"></a><br>
   <sub>Built by <a href="https://gizmodata.com">GizmoData™</a></sub>
 </p>
 
