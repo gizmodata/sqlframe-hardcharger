@@ -8,12 +8,12 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pepy/dt/sqlframe-hardcharger.svg" alt="PyPI Downloads"></a>
   <a href="https://github.com/gizmodata/sqlframe-hardcharger/actions/workflows/ci.yml"><img src="https://github.com/gizmodata/sqlframe-hardcharger/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/badge/PyPI-sqlframe--hardcharger-blue.svg?logo=PyPI" alt="PyPI"></a>
-  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-3776AB.svg?logo=python&logoColor=white" alt="Python 3.11 to 3.14">
+  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pypi/v/sqlframe-hardcharger?logo=pypi" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/badge/Python-3.11–3.14-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11–3.14"></a>
+  <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pepy/dt/sqlframe-hardcharger.svg" alt="PyPI downloads"></a>
   <a href="https://github.com/eakmanrq/sqlframe"><img src="https://img.shields.io/badge/SQLFrame-4.5-31a8db.svg" alt="SQLFrame 4.5"></a>
-  <a href="https://github.com/gizmodata/hardcharger-adbc"><img src="https://img.shields.io/badge/driver-adbc--driver--hardcharger-f15a24.svg" alt="adbc-driver-hardcharger"></a>
+  <a href="https://github.com/gizmodata/hardcharger-adbc"><img src="https://img.shields.io/badge/driver-Hardcharger%20ADBC-f15a24.svg" alt="adbc-driver-hardcharger"></a>
   <a href="https://github.com/gizmodata/warp-sql"><img src="https://img.shields.io/badge/protocol-Warp%20SQL-31a8db.svg" alt="Warp SQL protocol"></a>
   <a href="https://github.com/gizmodata/hardcharger"><img src="https://img.shields.io/badge/server-Hardcharger-f15a24.svg" alt="Hardcharger"></a>
   <a href="https://github.com/gizmodata/sqlframe-hardcharger/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg" alt="Apache 2.0 license"></a>
