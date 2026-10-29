@@ -9,6 +9,7 @@ fresh in-memory database.
 
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import time
 import typing as t
@@ -122,6 +123,21 @@ PLATFORM_DEPENDENT: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
 }
 
 
+# Upstream tests whose vendored (v4.5.0) expectation a later SQLFrame release changed on purpose:
+# from that release on, the installed sqlframe behaves like its own suite at that release, and the
+# test must fail the way described (strict, so it can't pass by accident). Re-vendoring the suite
+# at a newer release removes the entry.
+SQLFRAME_CHANGED: t.Dict[str, t.Tuple[t.Tuple[int, int], str, t.Type[BaseException]]] = {
+    "test_special_characters_in_column_names": (
+        (4, 7),
+        "sqlframe 4.7.0 keeps the case of column names (eakmanrq/sqlframe#662), and its own suite "
+        "expects \"`'ABC'`\" where the vendored v4.5.0 one expects \"`'abc'`\"",
+        AssertionError,
+    ),
+}
+SQLFRAME_VERSION = tuple(int(part) for part in importlib.metadata.version("sqlframe").split(".")[:2])
+
+
 def pytest_collection_modifyitems(items):
     suite = Path(__file__).resolve().parent
     for item in items:
@@ -129,6 +145,9 @@ def pytest_collection_modifyitems(items):
             continue
         if item.originalname in KNOWN_FAILURES:
             reason, raises = KNOWN_FAILURES[item.originalname]
+            item.add_marker(pytest.mark.xfail(reason=reason, raises=raises, strict=True))
+        elif item.originalname in SQLFRAME_CHANGED and SQLFRAME_VERSION >= SQLFRAME_CHANGED[item.originalname][0]:
+            _, reason, raises = SQLFRAME_CHANGED[item.originalname]
             item.add_marker(pytest.mark.xfail(reason=reason, raises=raises, strict=True))
         elif item.originalname in PLATFORM_DEPENDENT:
             reason, raises = PLATFORM_DEPENDENT[item.originalname]
