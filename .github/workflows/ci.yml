@@ -11,13 +11,10 @@ name: ci
 #   - readme: every Python example in README.md, run as written against a live server;
 #   - build: the sdist and wheel.
 #
-# Access while the Hardcharger repositories and image are private, with no personal token (once they
-# are public, and the driver is on PyPI, none of this is needed):
-#   - ghcr.io/gizmodata/hardcharger, pulled with this workflow's GITHUB_TOKEN: the package grants
-#     this repository read access (package settings, Manage Actions access);
-#   - gizmodata/hardcharger-adbc and gizmodata/warp-sql-adbc (the driver and the Go module it is
-#     built on), each through a read-only deploy key of that repository, kept here as the
-#     DEPLOY_KEY_HARDCHARGER_ADBC and DEPLOY_KEY_WARP_SQL_ADBC secrets.
+# hardcharger-server comes from the image ghcr.io/gizmodata/hardcharger, pulled with this
+# workflow's GITHUB_TOKEN (no personal token): the package grants this repository read access
+# (package settings, Manage Actions access). gizmodata/hardcharger-adbc and the Go modules the
+# driver is built on are public, and are fetched anonymously.
 
 on:
   push:
@@ -55,8 +52,6 @@ jobs:
       - uses: ./.github/actions/hardcharger-driver
         with:
           ref: ${{ env.HARDCHARGER_ADBC_REF }}
-          hardcharger-adbc-deploy-key: ${{ secrets.DEPLOY_KEY_HARDCHARGER_ADBC }}
-          warp-sql-adbc-deploy-key: ${{ secrets.DEPLOY_KEY_WARP_SQL_ADBC }}
       - uses: actions/upload-artifact@v7
         with:
           name: driver-wheel
