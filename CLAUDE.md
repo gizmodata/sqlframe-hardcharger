@@ -50,7 +50,9 @@ Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql rep
   binary the tests FAIL; never make them skip. Test variables are `SQLFRAME_HARDCHARGER_TEST_*`.
 - `tests/sqlframe_suite/upstream` is SQLFrame's engine suite, vendored by
   `scripts/vendor_sqlframe_suite.py` (mechanical rewrites only; don't edit, re-run the script).
-  `compat.py` binds its DuckDB names to the Hardcharger classes. `KNOWN_FAILURES` in that
+  `compat.py` binds its DuckDB names to the Hardcharger classes. The `sqlframe` floor in
+  `pyproject.toml` is the release the suite is vendored from: CI's lowest-dependencies job runs
+  the suite at the floor. `KNOWN_FAILURES` in that
   conftest are strict xfails with the exception they must raise; each needs a reason outside
   this package.
 - On macOS, run the live tests in a Linux container from the server image (the binary is
@@ -61,8 +63,10 @@ Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql rep
 ## Releases
 
 Version in `pyproject.toml` only; CHANGELOG in Keep-a-Changelog form. `release.yml` runs on `v*`
-tags: the full CI (`workflow_call`, `secrets: inherit`), then build and a GitHub Release. No
-PyPI publish job until Philip says so.
+tags: the full CI (`workflow_call`, `secrets: inherit`), then the sdist and wheel (refused while
+PyPI lacks the `adbc-driver-hardcharger` floor), Philip's approval (the `release` environment),
+PyPI through trusted publishing (the `pypi` environment, no token), and a GitHub Release with the
+tag's CHANGELOG section. After a release, check `https://pypi.org/pypi/sqlframe-hardcharger/json`.
 
 ## Code style
 

@@ -1,4 +1,4 @@
-# Vendored from eakmanrq/sqlframe v4.5.0 (0e706a1) tests/integration/engines/duck/test_duckdb_catalog.py by
+# Vendored from eakmanrq/sqlframe v4.9.0 (34f250a) tests/integration/engines/duck/test_duckdb_catalog.py by
 # scripts/vendor_sqlframe_suite.py: mechanical rewrites only (see that script). Don't edit;
 # re-run the script. Upstream license: MIT.
 import pytest

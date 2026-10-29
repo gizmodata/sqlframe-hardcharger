@@ -53,6 +53,19 @@ class TestReadLocalFiles:
         assert len(result) == 2
         assert result[1].name == "Bob"
 
+    def test_read_csv_keeps_column_case(self, session, tmp_path):
+        """Column names keep the file's spelling (as sqlframe's DuckDB reader does), and stay
+        case-insensitive to refer to."""
+        f = tmp_path / "mixed_case.csv"
+        f.write_text(data="UPPER_NAME,MixedCase,lower_name\n1,2,3\n")
+
+        df = session.read.csv(str(f), header=True)
+
+        assert df.columns == ["UPPER_NAME", "MixedCase", "lower_name"]
+        assert [field.name for field in df.schema.fields] == df.columns
+        assert df.collect()[0].asDict() == {"UPPER_NAME": 1, "MixedCase": 2, "lower_name": 3}
+        assert df.select("upper_name", "MIXEDCASE").collect()[0] == (1, 2)
+
     def test_read_parquet_local_file(self, session, tmp_path):
         f = tmp_path / "people.parquet"
         pa_parquet.write_table(table=pa.table(data={"id": [1, 2, 3]}), where=f)

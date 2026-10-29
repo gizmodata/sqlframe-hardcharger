@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-10-29
+
+### Fixed
+
+- A DataFrame from `spark.read.csv()` or `spark.read.parquet()` of client-local files, or from
+  `session.ingest()`, shows its columns as the data spells them (`UPPER_NAME`, `MixedCase`), as
+  SQLFrame's own DuckDB backend does; they were lower-cased. Referring to a column stays
+  case-insensitive.
+
+### Changed
+
+- Require `sqlframe` 4.9.0 (was 4.5.0). SQLFrame's engine suite is now vendored from 4.9.0 and runs
+  against Hardcharger 2.3.0, so the lowest-dependencies CI job tests the floor with the suite
+  written for it.
+
 ## [2.1.0] - 2026-10-29
 
 ### Changed

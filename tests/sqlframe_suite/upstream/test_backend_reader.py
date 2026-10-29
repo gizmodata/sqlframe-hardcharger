@@ -1,4 +1,4 @@
-# Vendored from eakmanrq/sqlframe v4.5.0 (0e706a1) tests/integration/engines/duck/test_duckdb_reader.py by
+# Vendored from eakmanrq/sqlframe v4.9.0 (34f250a) tests/integration/engines/duck/test_duckdb_reader.py by
 # scripts/vendor_sqlframe_suite.py: mechanical rewrites only (see that script). Don't edit;
 # re-run the script. Upstream license: MIT.
 import os
@@ -147,6 +147,24 @@ def test_read_parquet_optimize(hardcharger_session: DuckDBSession):
     )  # Contains a `person_id` and a `person_source_value` column
     df.createOrReplaceTempView("employee")
     hardcharger_session.table("employee").sql(optimize=True)
+
+
+# https://github.com/eakmanrq/sqlframe/issues/382
+def test_read_parquet_preserves_column_case(hardcharger_session: DuckDBSession, tmp_path):
+    path = tmp_path / "mixed_case.parquet"
+    hardcharger_session._conn.execute(
+        f"""COPY (SELECT 1 AS "UPPER_NAME", 2 AS "MixedCase", 3 AS lower_name)
+            TO '{path}' (FORMAT PARQUET)"""
+    )
+
+    df = hardcharger_session.read.parquet(str(path))
+
+    assert df.columns == ["UPPER_NAME", "MixedCase", "lower_name"]
+    assert [field.name for field in df.schema.fields] == df.columns
+    assert df.collect()[0].asDict() == {"UPPER_NAME": 1, "MixedCase": 2, "lower_name": 3}
+    assert df.select("*").columns == df.columns
+    assert df.filter("upper_name = 1").columns == df.columns
+    assert df.select("upper_name", "MIXEDCASE").collect()[0] == (1, 2)
 
 
 # https://github.com/eakmanrq/sqlframe/issues/499

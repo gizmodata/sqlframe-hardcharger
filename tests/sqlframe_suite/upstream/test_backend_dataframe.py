@@ -1,7 +1,8 @@
-# Vendored from eakmanrq/sqlframe v4.5.0 (0e706a1) tests/integration/engines/duck/test_duckdb_dataframe.py by
+# Vendored from eakmanrq/sqlframe v4.9.0 (34f250a) tests/integration/engines/duck/test_duckdb_dataframe.py by
 # scripts/vendor_sqlframe_suite.py: mechanical rewrites only (see that script). Don't edit;
 # re-run the script. Upstream license: MIT.
 import datetime
+import warnings
 
 import pytest
 
@@ -180,6 +181,37 @@ def test_reserved_word(hardcharger_session: DuckDBSession):
     ]
 
 
+@pytest.mark.parametrize(
+    ("name", "remaining"),
+    [
+        ("UPPER_NAME", "MixedCase"),
+        ("upper_name", "MixedCase"),
+        ("UpPeR_nAmE", "MixedCase"),
+        ("MixedCase", "UPPER_NAME"),
+        ("mixedcase", "UPPER_NAME"),
+    ],
+)
+def test_drop_mixed_case_column_by_name(hardcharger_session: DuckDBSession, name: str, remaining: str):
+    df = hardcharger_session.createDataFrame([(1, 2)], ["UPPER_NAME", "MixedCase"])
+
+    assert df.columns == ["UPPER_NAME", "MixedCase"]
+    dropped = df.drop(name)
+    assert dropped.columns == [remaining]
+    assert dropped.collect()[0].asDict() == {remaining: 2 if remaining == "MixedCase" else 1}
+
+
+def test_drop_mixed_case_column_after_posexplode(hardcharger_session: DuckDBSession):
+    df = hardcharger_session.createDataFrame([(2, [10, 20])], ["Num_Lines", "lines"])
+    exploded = df.select("*", F.posexplode("lines").alias("Line_Pos", "Line_Val"))
+
+    dropped = exploded.drop("Num_Lines")
+    assert dropped.columns == ["lines", "Line_Pos", "Line_Val"]
+    assert dropped.collect() == [
+        types.Row(lines=[10, 20], Line_Pos=0, Line_Val=10),
+        types.Row(lines=[10, 20], Line_Pos=1, Line_Val=20),
+    ]
+
+
 def test_to_arrow(hardcharger_employee: DuckDBDataFrame):
     arrow_table = hardcharger_employee.toArrow()
     assert arrow_table.num_rows == 5
@@ -202,6 +234,17 @@ def test_to_arrow(hardcharger_employee: DuckDBDataFrame):
     ]
     assert arrow_table.column(3).to_pylist() == [37, 65, 37, 27, 29]
     assert arrow_table.column(4).to_pylist() == [1, 1, 2, 2, 100]
+
+
+@pytest.mark.parametrize("batch_size", [None, 1])
+def test_to_arrow_does_not_copy_dbapi_result(hardcharger_employee: DuckDBDataFrame, batch_size):
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = hardcharger_employee.toArrow(batch_size=batch_size)
+        if batch_size:
+            result.read_all()
+
+    assert not any("extra copy of the rows" in str(warning.message) for warning in caught)
 
 
 def test_to_arrow_batch(hardcharger_employee: DuckDBDataFrame):
@@ -257,18 +300,31 @@ def test_to_arrow_batch(hardcharger_employee: DuckDBDataFrame):
         record_batch_reader.read_next_batch()
 
 
+def test_to_arrow_after_other_collection_methods(hardcharger_session: DuckDBSession):
+    df = hardcharger_session.createDataFrame([(1, [1, 2, 3]), (2, [4, 5])], ["id", "values"])
+
+    assert len(df.collect()) == 2
+    assert len(df.toPandas()) == 2
+    assert df.toArrow().column("id").to_pylist() == [1, 2]
+    assert [batch.column("id").to_pylist() for batch in df.toArrow(batch_size=1)] == [[1], [2]]
+
+
+def test_lambda_functions_with_collection_and_pandas(hardcharger_session: DuckDBSession):
+    df = hardcharger_session.createDataFrame([(1, [1, 2, 3]), (2, [4, 5])], ["id", "values"])
+    transformed = df.select(F.transform("values", lambda x: x * 2).alias("doubled"))
+    filtered = df.select(F.filter("values", lambda x: x > 1).alias("filtered"))
+
+    assert transformed.collect() == [types.Row(doubled=[2, 4, 6]), types.Row(doubled=[8, 10])]
+    assert filtered.collect() == [types.Row(filtered=[2, 3]), types.Row(filtered=[4, 5])]
+    assert transformed.toPandas()["doubled"].tolist() == [[2, 4, 6], [8, 10]]
+    assert filtered.toPandas()["filtered"].tolist() == [[2, 3], [4, 5]]
+
+
 def test_explain(hardcharger_employee: DuckDBDataFrame, capsys):
     hardcharger_employee.explain()
-    assert (
-        capsys.readouterr().out.strip()
-        == """
-┌───────────────────────────┐
-│      COLUMN_DATA_SCAN     │
-│    ────────────────────   │
-│          ~5 rows          │
-└───────────────────────────┘
-""".strip()
-    )
+    plan = capsys.readouterr().out.lower()
+    assert "column data scan" in plan.replace("_", " ")
+    assert "~5 rows" in plan
 
 
 def test_duplicate_cte(hardcharger_session: DuckDBSession):
@@ -318,7 +374,7 @@ def test_special_characters_in_column_names(hardcharger_session: DuckDBSession):
     schema = df.schema
     assert len(schema.fields) == 3
     field_names = [f.name for f in schema.fields]
-    assert field_names == ["`'abc'`", "`map_cd1_%`", "\u2018abc\u2019"]
+    assert field_names == ["`'ABC'`", "`Map_CD1_%`", "\u2018ABC\u2019"]
 
     # Verify collect works - Row keys preserve original case from cursor description
     result = df.collect()
