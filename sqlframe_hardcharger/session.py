@@ -10,7 +10,7 @@ from functools import cached_property
 import pyarrow as pa
 import sqlglot
 from sqlframe.base.session import _BaseSession
-from sqlframe.base.util import normalize_string
+from sqlframe.base.util import normalize_string, quote_preserving_alias_or_name
 from sqlglot.dialects.dialect import Dialect
 from sqlglot.helper import ensure_list
 
@@ -292,8 +292,16 @@ class HardchargerSession(
             logger.info("Column types of %s don't parse; reading it with SELECT *", table_name)
             return self.sql(f"SELECT * FROM {table_name}")
         self._add_table_matching_depth(table_name=table_name, column_mapping=column_mapping)
-        select_list = ", ".join(_catalog_column_key(name=column_name) for column_name, *_ in described)
-        return self.sql(f"SELECT {select_list} FROM {table_name}")
+        names = [column_name for column_name, *_ in described]
+        select_list = ", ".join(_catalog_column_key(name=column_name) for column_name in names)
+        df = self.sql(f"SELECT {select_list} FROM {table_name}")
+        # The Spark input dialect folds identifiers to lower case. Show the table's own spelling,
+        # as sqlframe's DuckDB reader does: df.columns looks a column up by its quoted name
+        # (`upper_name`), df.schema by its bare one (upper_name).
+        for column, name in zip(df.expression.expressions, names):
+            df.display_name_mapping[column.alias_or_name] = name
+            df.display_name_mapping[quote_preserving_alias_or_name(col=column)] = name
+        return df
 
     @property
     def _is_duckdb(self) -> bool:

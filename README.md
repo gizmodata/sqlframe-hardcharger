@@ -12,7 +12,7 @@
   <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pypi/v/sqlframe-hardcharger?logo=pypi" alt="PyPI version"></a>
   <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/badge/Python-3.11–3.14-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11–3.14"></a>
   <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pepy/dt/sqlframe-hardcharger.svg" alt="PyPI downloads"></a>
-  <a href="https://github.com/eakmanrq/sqlframe"><img src="https://img.shields.io/badge/SQLFrame-4.5-31a8db.svg" alt="SQLFrame 4.5"></a>
+  <a href="https://github.com/eakmanrq/sqlframe"><img src="https://img.shields.io/badge/SQLFrame-4.9-31a8db.svg" alt="SQLFrame 4.9"></a>
   <a href="https://github.com/gizmodata/hardcharger-adbc"><img src="https://img.shields.io/badge/driver-Hardcharger%20ADBC-f15a24.svg" alt="adbc-driver-hardcharger"></a>
   <a href="https://github.com/gizmodata/chargewire"><img src="https://img.shields.io/badge/protocol-Chargewire-31a8db.svg" alt="Chargewire protocol"></a>
   <a href="https://github.com/gizmodata/hardcharger"><img src="https://img.shields.io/badge/server-Hardcharger-f15a24.svg" alt="Hardcharger"></a>
@@ -278,8 +278,10 @@ collector (`OTEL_EXPORTER_OTLP_ENDPOINT`).
 
 ## 🧭 Good to know
 
-- Column names come back lowercased unless quoted (`formID` becomes `formid`), as in every
-  SQLFrame backend; Spark keeps their case.
+- Column names written in `spark.sql()` come back lowercased, even in backticks
+  (`SELECT 1 AS formID` gives `formid`), as in every SQLFrame backend; Spark keeps their case.
+  Names given through the DataFrame API (`createDataFrame()`, `alias()`, `withColumn()`) and
+  columns read from files or ingested keep theirs.
 - Python UDFs (`spark.udf.register`) can't run: the server would have to call back into your
   Python process. Use `pyspark.sql.functions` or SQL.
 - In `spark.sql()`, identifiers are quoted with backticks (the input dialect is Spark SQL,

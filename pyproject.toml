@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sqlframe-hardcharger"
-version = "2.1.0"
+version = "2.1.1"
 description = "Hardcharger™ backend for SQLFrame: run PySpark DataFrame code on a Hardcharger server, no Spark cluster"
 readme = "README.md"
 license = "Apache-2.0"
@@ -37,7 +37,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "sqlframe>=4.5.0",
+    "sqlframe>=4.9.0",
     "sqlglot>=30.22.0",
     "adbc-driver-hardcharger>=2.1.0",
     "pyarrow>=26.0.0",
@@ -103,4 +103,6 @@ addopts = "-ra"
 markers = [
     "integration: runs against a live hardcharger-server (SQLFRAME_HARDCHARGER_TEST_SERVER_BINARY); fails, never skips, without one",
     "hardcharger: SQLFrame's engine suite, parametrized for the Hardcharger engine",
+    "duckdb: SQLFrame's DuckDB-only tests in its engine suite (they run here: Hardcharger is DuckDB to the suite)",
+    "local: SQLFrame's marker for tests without external connections (kept as upstream wrote it)",
 ]

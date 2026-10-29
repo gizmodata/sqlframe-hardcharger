@@ -13,10 +13,12 @@ pinned release, with mechanical rewrites only, so it runs against Hardcharger:
   against sessions that never exist here;
 - ``pytest_plugins`` lines go (tests/sqlframe_suite/conftest.py provides the fixtures);
 - the DuckDB backend's own catalog, DataFrame and reader tests come along, renamed
-  test_backend_*.py, with their ``duckdb_*`` fixtures renamed ``hardcharger_*``;
+  test_backend_*.py;
+- the ``duckdb_session`` and ``duckdb_employee`` fixtures, which the backend tests and a few
+  DuckDB-only engine tests take, become ``hardcharger_*`` in every file;
 - the data files the suite reads (tests/fixtures/) are copied too.
 
-Usage: scripts/vendor_sqlframe_suite.py [--ref v4.5.0] [--source DIR]
+Usage: scripts/vendor_sqlframe_suite.py [--ref v4.9.0] [--source DIR]
 Without --source it shallow-clones https://github.com/eakmanrq/sqlframe at --ref.
 """
 
@@ -30,7 +32,7 @@ import subprocess
 import tempfile
 
 REPO = "https://github.com/eakmanrq/sqlframe.git"
-DEFAULT_REF = "v4.5.0"
+DEFAULT_REF = "v4.9.0"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TARGET = ROOT / "tests" / "sqlframe_suite" / "upstream"
 SUITE_FILES = [
@@ -46,7 +48,8 @@ SUITE_FILES = [
 # The DuckDB backend's own tests (tests/integration/engines/duck/), which apply to Hardcharger as
 # written once their fixtures are the Hardcharger ones. The rest of that directory is ported by
 # hand (tests/sqlframe_suite/test_hardcharger_backend.py) or not at all (test_tpcds.py compares
-# with a PySpark session on a JVM).
+# with a PySpark session on a JVM; test_duckdb_eager_validation.py tests the DuckDB
+# backend's own eager_validation option on in-process DuckDB connections).
 BACKEND_FILES = {
     "test_duckdb_catalog.py": "test_backend_catalog.py",
     "test_duckdb_dataframe.py": "test_backend_dataframe.py",
@@ -96,6 +99,8 @@ REWRITES: list[tuple[str, str]] = [
 
 
 def rewrite(text: str, source: str, ref: str, commit: str) -> str:
+    # The suite's fixtures for the one engine here are hardcharger_*.
+    text = re.sub(pattern=r"\bduckdb_(session|employee)\b", repl=r"hardcharger_\1", string=text)
     for pattern, replacement in REWRITES:
         text = re.sub(pattern=pattern, repl=replacement, string=text, flags=re.MULTILINE)
     leftover = re.findall(pattern=r"^\s*(?:from|import) (?:pyspark|duckdb)\b.*$", string=text, flags=re.MULTILINE)
@@ -149,8 +154,6 @@ def main() -> None:
                 if CATALOG_FIXTURE_OLD not in text:
                     raise SystemExit(f"{name}: its session fixture changed; update CATALOG_FIXTURE_OLD")
                 text = text.replace(CATALOG_FIXTURE_OLD, CATALOG_FIXTURE_NEW)
-            # The suite's fixtures for the one engine here are hardcharger_*.
-            text = re.sub(pattern=r"\bduckdb_(session|employee)\b", repl=r"hardcharger_\1", string=text)
             (TARGET / new_name).write_text(
                 data=rewrite(text=text, source=f"tests/integration/engines/duck/{name}", ref=args.ref, commit=commit)
             )

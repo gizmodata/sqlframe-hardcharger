@@ -19,6 +19,16 @@ class TestIngest:
         assert result[0].id == 1
         assert result[0].name == "Alice"
 
+    def test_ingest_keeps_column_case(self, session):
+        """The DataFrame over the ingested table shows its columns as the data spelled them."""
+        arrow_table = pa.table(data={"UPPER_NAME": [1], "MixedCase": ["a"], "lower_name": [True]})
+
+        df = session.ingest(table_name="ingest_column_case", data=arrow_table, mode="create")
+
+        assert df.columns == ["UPPER_NAME", "MixedCase", "lower_name"]
+        assert df.collect()[0].asDict() == {"UPPER_NAME": 1, "MixedCase": "a", "lower_name": True}
+        assert df.filter("upper_name = 1").columns == df.columns
+
     def test_ingest_append(self, session):
         """Test that mode='append' accumulates rows across calls."""
         table_name = "ingest_append"

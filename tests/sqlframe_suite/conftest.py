@@ -77,17 +77,13 @@ KNOWN_FAILURES: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
         adbc_driver_manager.ProgrammingError,
     ),
     "test_first_value": (
-        "sqlframe 4.5.0 with pandas 3: a str column's missing values become NaN floats in "
+        "sqlframe (4.5.0 through 4.9.0) with pandas 3: a str column's missing values become NaN floats in "
         "createDataFrame()'s VALUES list; fails the same way on in-process DuckDB 1.5",
         adbc_driver_manager.ProgrammingError,
     ),
     "test_last_value": (
-        "sqlframe 4.5.0 with pandas 3 (see test_first_value)",
+        "sqlframe with pandas 3 (see test_first_value)",
         adbc_driver_manager.ProgrammingError,
-    ),
-    "test_explain": (
-        "DuckDB 2.0 draws EXPLAIN plans differently (rounded boxes) from the DuckDB 1.x text upstream expects",
-        AssertionError,
     ),
     "test_employee_extra_line_csv": (
         "the client-side CSV reader (as in sqlframe-gizmosql) parses with pyarrow and ignores, with a "
@@ -123,18 +119,12 @@ PLATFORM_DEPENDENT: t.Dict[str, t.Tuple[str, t.Type[BaseException]]] = {
 }
 
 
-# Upstream tests whose vendored (v4.5.0) expectation a later SQLFrame release changed on purpose:
+# Upstream tests whose vendored (v4.9.0) expectation a later SQLFrame release changed on purpose:
 # from that release on, the installed sqlframe behaves like its own suite at that release, and the
-# test must fail the way described (strict, so it can't pass by accident). Re-vendoring the suite
-# at a newer release removes the entry.
-SQLFRAME_CHANGED: t.Dict[str, t.Tuple[t.Tuple[int, int], str, t.Type[BaseException]]] = {
-    "test_special_characters_in_column_names": (
-        (4, 7),
-        "sqlframe 4.7.0 keeps the case of column names (eakmanrq/sqlframe#662), and its own suite "
-        "expects \"`'ABC'`\" where the vendored v4.5.0 one expects \"`'abc'`\"",
-        AssertionError,
-    ),
-}
+# test must fail the way described (strict, so it can't pass by accident). Entries are
+# {name: ((major, minor), reason, exception)}; re-vendoring the suite at a newer release removes
+# them.
+SQLFRAME_CHANGED: t.Dict[str, t.Tuple[t.Tuple[int, int], str, t.Type[BaseException]]] = {}
 SQLFRAME_VERSION = tuple(int(part) for part in importlib.metadata.version("sqlframe").split(".")[:2])
 
 
