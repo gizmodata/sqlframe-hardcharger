@@ -6,7 +6,7 @@ Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql rep
 
 ## Architecture
 
-- **Driver**: `adbc-driver-hardcharger` (gizmodata/hardcharger-adbc; until it is on PyPI, CI builds it):
+- **Driver**: `adbc-driver-hardcharger` >= 2.1.0 (gizmodata/hardcharger-adbc; CI builds its release commit):
   `hardcharger://` URIs (HTTPS, port 31337), Chargewire over HTTP. `connect.py` wraps its DB-API
   connection: `HardchargerConnection(**connect_kwargs)` takes `dbapi.connect()`'s keyword
   arguments; `HardchargerAdbcCursor` proxies an explicit list of cursor methods (add a method

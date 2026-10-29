@@ -51,7 +51,7 @@ pip install sqlframe-hardcharger
 ```
 
 Python 3.11 or later. It installs SQLFrame, pyarrow and the driver,
-`adbc-driver-hardcharger`, from PyPI. Both ship with Hardcharger 2.0.0.
+`adbc-driver-hardcharger` 2.1.0 or newer, from PyPI.
 
 ## 🚀 Quick start
 

@@ -6,12 +6,16 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-29
+
 ### Changed
 
 - sqlframe-hardcharger now uses the Chargewire protocol and drivers, the new name of the protocol
   `adbc-driver-hardcharger` speaks; statement options are `adbc.chargewire.*`. It still works with
-  Hardcharger servers released before the rename, and with drivers that only know the earlier
-  option names.
+  Hardcharger servers released before the rename.
+- Require `adbc-driver-hardcharger` 2.1.0, the first driver release that speaks Chargewire (and
+  takes `adbc.chargewire.*` options); CI tests the driver built from its v2.1.0 release commit,
+  against Hardcharger 2.3.0.
 
 ## [2.0.1] - 2026-10-22
 

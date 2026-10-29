@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sqlframe-hardcharger"
-version = "2.0.1"
+version = "2.1.0"
 description = "Hardcharger™ backend for SQLFrame: run PySpark DataFrame code on a Hardcharger server, no Spark cluster"
 readme = "README.md"
 license = "Apache-2.0"
@@ -39,7 +39,7 @@ classifiers = [
 dependencies = [
     "sqlframe>=4.5.0",
     "sqlglot>=30.22.0",
-    "adbc-driver-hardcharger>=2.0.0",
+    "adbc-driver-hardcharger>=2.1.0",
     "pyarrow>=26.0.0",
 ]
 

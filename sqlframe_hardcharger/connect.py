@@ -3,9 +3,6 @@ from __future__ import annotations
 import typing as t
 
 from adbc_driver_hardcharger import dbapi as hardcharger_dbapi
-from adbc_driver_manager import NotSupportedError
-
-from sqlframe_hardcharger._legacy import legacy_statement_options
 
 
 class HardchargerAdbcCursor:
@@ -69,15 +66,7 @@ class HardchargerAdbcCursor:
 
     def set_statement_options(self, options: t.Dict[str, str]) -> None:
         """Set ADBC statement options (``adbc.chargewire.*``) on this cursor's statement."""
-        statement = self._open_inner().adbc_statement
-        try:
-            statement.set_options(**options)
-        except NotSupportedError:
-            # A driver from before the protocol's rename knows these options by their old names.
-            legacy = legacy_statement_options(options=options)
-            if legacy is None:
-                raise
-            statement.set_options(**legacy)
+        self._open_inner().adbc_statement.set_options(**options)
 
     def fetchone(self) -> t.Any:
         return self._open_inner().fetchone()

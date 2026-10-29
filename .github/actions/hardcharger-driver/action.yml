@@ -1,7 +1,6 @@
 name: adbc-driver-hardcharger from source
 description: >
-  Builds a wheel of adbc-driver-hardcharger (gizmodata/hardcharger-adbc; until it is on PyPI)
-  at a pinned commit, with its Go library, into dist-driver/. The repository and the Go modules
+  Builds a wheel of adbc-driver-hardcharger (gizmodata/hardcharger-adbc) at a pinned commit, with its Go library, into dist-driver/. The repository and the Go modules
   it needs are public: cloned and fetched anonymously over HTTPS, no key or token.
 inputs:
   ref:
