@@ -47,6 +47,6 @@ def test_statement_options_reach_the_driver_statement():
 
     inner = MagicMock()
     cursor = HardchargerAdbcCursor(parent=MagicMock(), inner=inner)
-    cursor.set_statement_options(options={"adbc.warp.ingest.parts": "1"})
+    cursor.set_statement_options(options={"adbc.chargewire.ingest.parts": "1"})
 
-    inner.adbc_statement.set_options.assert_called_once_with(**{"adbc.warp.ingest.parts": "1"})
+    inner.adbc_statement.set_options.assert_called_once_with(**{"adbc.chargewire.ingest.parts": "1"})

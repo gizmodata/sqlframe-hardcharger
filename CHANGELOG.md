@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Changed
+
+- sqlframe-hardcharger now uses the Chargewire protocol and drivers, the new name of the protocol
+  `adbc-driver-hardcharger` speaks; statement options are `adbc.chargewire.*`. It still works with
+  Hardcharger servers released before the rename, and with drivers that only know the earlier
+  option names.
+
 ## [2.0.1] - 2026-10-22
 
 ### Documentation
@@ -31,10 +38,10 @@ never published.
   CONTRIBUTING.md with the Developer Certificate of Origin sign-off, SECURITY.md,
   CODE_OF_CONDUCT.md, and the LICENSE copyright line.
 
-- Browser sign-in (`hardcharger.auth_type` = `external`) runs on the server's own port (Warp SQL
+- Browser sign-in (`hardcharger.auth_type` = `external`) runs on the server's own port (Chargewire
   protocol 1.0.0, spec §4.3): the `hardcharger.oauth_url` and `hardcharger.oauth_port` options are
   gone, with `adbc-driver-hardcharger`'s. `oauth_timeout` and `open_browser` stay.
-- The driver is built from hardcharger-adbc `13f4eb4` (Warp SQL 1.0.0, on warp-sql-adbc `a81c326`;
+- The driver is built from hardcharger-adbc `13f4eb4` (Chargewire 1.0.0, on chargewire-adbc `a81c326`;
   was `9a087be`), tested against `hardcharger-server` 2.0.0-rc.1. SQL errors from it are
   `ProgrammingError`, not `InternalError`; a plain-HTTP server reached with TLS says so.
 - The live tests start browser sign-in servers with `--oauth-base-url`; the mock identity
@@ -51,7 +58,7 @@ never published.
 ## [0.1.0] - 2026-10-19
 
 The Hardcharger™ port of sqlframe-gizmosql 1.6.1: the same PySpark DataFrame API on
-Hardcharger, GizmoData™'s DuckDB 2.0 server, through `adbc-driver-hardcharger` and the Warp
+Hardcharger, GizmoData™'s DuckDB 2.0 server, through `adbc-driver-hardcharger` and the Chargewire
 SQL protocol.
 
 ### Added
@@ -100,7 +107,7 @@ SQL protocol.
 
 ### Removed (from sqlframe-gizmosql)
 
-- `gizmosql.max_msg_size` and the size-limit retries around ingest and JSON reads: Warp SQL
+- `gizmosql.max_msg_size` and the size-limit retries around ingest and JSON reads: Chargewire
   streams uploads over HTTP with no message-size limit.
 - The staging table behind `ingest(mode="append")`: an ingest is one transaction.
 - The workaround for fetching after DDL/DML, which `adbc-driver-hardcharger` handles.

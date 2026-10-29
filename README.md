@@ -14,7 +14,7 @@
   <a href="https://pypi.org/project/sqlframe-hardcharger/"><img src="https://img.shields.io/pepy/dt/sqlframe-hardcharger.svg" alt="PyPI downloads"></a>
   <a href="https://github.com/eakmanrq/sqlframe"><img src="https://img.shields.io/badge/SQLFrame-4.5-31a8db.svg" alt="SQLFrame 4.5"></a>
   <a href="https://github.com/gizmodata/hardcharger-adbc"><img src="https://img.shields.io/badge/driver-Hardcharger%20ADBC-f15a24.svg" alt="adbc-driver-hardcharger"></a>
-  <a href="https://github.com/gizmodata/warp-sql"><img src="https://img.shields.io/badge/protocol-Warp%20SQL-31a8db.svg" alt="Warp SQL protocol"></a>
+  <a href="https://github.com/gizmodata/chargewire"><img src="https://img.shields.io/badge/protocol-Chargewire-31a8db.svg" alt="Chargewire protocol"></a>
   <a href="https://github.com/gizmodata/hardcharger"><img src="https://img.shields.io/badge/server-Hardcharger-f15a24.svg" alt="Hardcharger"></a>
   <a href="https://github.com/gizmodata/sqlframe-hardcharger/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg" alt="Apache 2.0 license"></a>
   <a href="https://gizmodata.com"><img src="https://img.shields.io/badge/by-GizmoData%E2%84%A2-f15a24.svg" alt="GizmoData™"></a>
@@ -132,7 +132,7 @@ argument of `activate()`. They are the keyword arguments of
 | `hardcharger.session_tag`, `hardcharger.query_tag` | JSON objects the server records with the session and its statements |
 | `hardcharger.settings` | `hardcharger.*` session settings, e.g. `{"query_timeout": 60}` |
 | `hardcharger.catalog`, `hardcharger.db_schema` | The session's current catalog and schema |
-| `hardcharger.db_kwargs`, `hardcharger.conn_kwargs` | Any other ADBC option (`adbc.hardcharger.*`, `adbc.warp.*`, `adbc.telemetry.*`) |
+| `hardcharger.db_kwargs`, `hardcharger.conn_kwargs` | Any other ADBC option (`adbc.hardcharger.*`, `adbc.chargewire.*`, `adbc.telemetry.*`) |
 
 A token from your identity platform:
 
@@ -294,7 +294,7 @@ collector (`OTEL_EXPORTER_OTLP_ENDPOINT`).
 | `GizmoSQLSession`, `GizmoSQLDataFrame`, ... | `HardchargerSession`, `HardchargerDataFrame`, ... |
 | `gizmosql.uri` = `grpc+tls://host:31337` or `gizmosql://host` | `hardcharger.uri` = `hardcharger://host` |
 | `gizmosql.username`, `.password`, `.tls_skip_verify`, `.auth_type` | the same names under `hardcharger.`, plus `access_token`, `tls_root_certs`, client certificates and every other `connect()` argument |
-| `gizmosql.max_msg_size` | gone: Warp SQL streams uploads over HTTP, with no message-size limit |
+| `gizmosql.max_msg_size` | gone: Chargewire streams uploads over HTTP, with no message-size limit |
 | `ingest()` appends staged through a temporary table | an ingest is one transaction; `ingest_parts` controls parallel upload |
 
 ## 🛠️ Development

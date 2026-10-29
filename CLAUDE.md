@@ -7,7 +7,7 @@ Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql rep
 ## Architecture
 
 - **Driver**: `adbc-driver-hardcharger` (gizmodata/hardcharger-adbc; until it is on PyPI, CI builds it):
-  `hardcharger://` URIs (HTTPS, port 31337), Warp SQL over HTTP. `connect.py` wraps its DB-API
+  `hardcharger://` URIs (HTTPS, port 31337), Chargewire over HTTP. `connect.py` wraps its DB-API
   connection: `HardchargerConnection(**connect_kwargs)` takes `dbapi.connect()`'s keyword
   arguments; `HardchargerAdbcCursor` proxies an explicit list of cursor methods (add a method
   there to reach it through the session).
@@ -27,9 +27,9 @@ Philip's go-ahead. Hardcharger work stays here, not in the sqlframe-gizmosql rep
 ## Bulk ingest and client-local reads
 
 - `ingest()` re-batches a Table to ~8 MiB batches and calls `adbc_ingest()` on a dedicated
-  cursor. An ingest is one transaction (Warp SQL), so there is no staging or size-limit retry
+  cursor. An ingest is one transaction (Chargewire), so there is no staging or size-limit retry
   (sqlframe-gizmosql needed both for gRPC's 16 MiB messages). The driver uploads 2+ batches over
-  up to 8 connections (`adbc.warp.ingest.parts`), so rows land unordered unless
+  up to 8 connections (`adbc.chargewire.ingest.parts`), so rows land unordered unless
   `ingest_parts=1`. Client-local reads pass 1 by default (Spark keeps file order).
 - `_dataframe_over_table()` DESCRIBEs the table, registers its columns and selects them by name;
   a lazy `SELECT *` breaks `createOrReplaceTempView()`. `_add_table_matching_depth()` registers

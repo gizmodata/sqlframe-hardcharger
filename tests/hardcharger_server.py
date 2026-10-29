@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+from sqlframe_hardcharger._legacy import LEGACY_PROTOCOL, LEGACY_ROOT
+
 SERVER_BINARY_ENV = "SQLFRAME_HARDCHARGER_TEST_SERVER_BINARY"
 USERNAME = "sqlframe_test"
 #: The e-mail identity of the client certificate that signs in as the administrator.
@@ -64,11 +66,20 @@ class Server:
             kwargs["tls_root_certs"] = str(self.ca)
         return kwargs
 
+    def api_root(self, context: ssl.SSLContext | None = None) -> str:
+        """The server's versioned HTTP API root: ``/chargewire/v1``, or the old one on a server
+        released before the protocol's rename (404 at ``/chargewire``). Neither: the test fails."""
+        if _discovery(url=f"{self.base_url}/chargewire", context=context).get("protocol") == "chargewire":
+            return "/chargewire/v1"
+        if _discovery(url=f"{self.base_url}{LEGACY_ROOT}", context=context).get("protocol") == LEGACY_PROTOCOL:
+            return f"{LEGACY_ROOT}/v1"
+        raise AssertionError(f"{self.base_url} does not serve the Chargewire protocol")
+
     def password_token(self) -> str:
         """An access token from the password grant (spec 4.1), fetched over plain HTTP(S)."""
         context = ssl.create_default_context(cafile=str(self.ca)) if self.tls else None
         request = urllib.request.Request(
-            url=f"{self.base_url}/warp/v1/auth/token",
+            url=f"{self.base_url}{self.api_root(context=context)}/auth/token",
             data=json.dumps(
                 obj={"grant_type": "password", "username": self.username, "password": self.password}
             ).encode(),
@@ -83,6 +94,17 @@ class Server:
             return "\n".join(self.log.read_text(errors="replace").splitlines()[-lines:])
         except OSError:
             return ""
+
+
+def _discovery(url: str, context: ssl.SSLContext | None) -> dict:
+    """The discovery document at ``url``, or ``{}`` when nothing is there (404)."""
+    try:
+        with urllib.request.urlopen(url=url, timeout=10, context=context) as response:
+            return json.loads(s=response.read())
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return {}
+        raise
 
 
 def free_port() -> int:
@@ -118,14 +140,16 @@ def _wait_up(server: Server, timeout: float = 60) -> None:
         if server.process.poll() is not None:
             break
         try:
-            with urllib.request.urlopen(url=f"{server.base_url}/warp", timeout=2, context=context):
+            with urllib.request.urlopen(url=f"{server.base_url}/chargewire", timeout=2, context=context):
                 return
+        except urllib.error.HTTPError:
+            return  # it answered (a server from before the rename answers 404 here)
         except (urllib.error.URLError, OSError) as error:
             last_error = error
         time.sleep(0.1)
     stop_server(server=server)
     pytest.fail(
-        reason=f"hardcharger-server did not answer at {server.base_url}/warp "
+        reason=f"hardcharger-server did not answer at {server.base_url}/chargewire "
         f"({last_error}); its log:\n{server.log_tail()}"
     )
 

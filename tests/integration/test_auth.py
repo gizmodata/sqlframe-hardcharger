@@ -201,7 +201,7 @@ def oauth_server(tmp_path_factory, idp_issuer):
             CLIENT_ID,
             "--oauth-client-secret",
             CLIENT_SECRET,
-            # Browser sign-in runs on the server's own port (Warp SQL §4.3); the redirect URI
+            # Browser sign-in runs on the server's own port (Chargewire §4.3); the redirect URI
             # names 127.0.0.1, where the tests dial it.
             "--oauth-base-url",
             "{base_url}",

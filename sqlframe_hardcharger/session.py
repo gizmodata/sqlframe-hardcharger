@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 IngestMode = t.Literal["append", "create", "replace", "create_append"]
 
 # A pyarrow.Table is re-batched to about this many bytes per record batch
-# before it is streamed. Warp SQL has no message-size limit (an ingest is one
+# before it is streamed. Chargewire has no message-size limit (an ingest is one
 # streamed HTTP request, or several in parallel, committed as one
 # transaction), so this is not about fitting a limit: one giant batch would go
 # over a single connection, while many moderate batches let the driver spread
@@ -47,9 +47,9 @@ IngestMode = t.Literal["append", "create", "replace", "create_append"]
 _INGEST_TARGET_BATCH_BYTES = 8 * 1024 * 1024
 
 #: The statement option that caps how many connections one bulk ingest uses
-#: (``adbc.warp.ingest.parts``; the driver's default is 8). 1 sends one ordered
+#: (``adbc.chargewire.ingest.parts``; the driver's default is 8). 1 sends one ordered
 #: stream, so rows land in the table in the order they were sent.
-INGEST_PARTS_OPTION = "adbc.warp.ingest.parts"
+INGEST_PARTS_OPTION = "adbc.chargewire.ingest.parts"
 
 # The keyword arguments of adbc_driver_hardcharger.dbapi.connect() that the
 # session builder takes as ``hardcharger.<name>`` config keys, and activate()
@@ -171,7 +171,7 @@ class HardchargerSession(
         if rows or skip_rows:
             return rows
         # DuckDB answers INSERT/UPDATE/DELETE/MERGE with one row holding the affected row
-        # count, and sqlframe's table API (df.update(...).execute()) returns that; Warp SQL
+        # count, and sqlframe's table API (df.update(...).execute()) returns that; Chargewire
         # reports it as the statement's row count instead of a result set.
         last = ensure_list(expressions)[-1]
         if isinstance(last, (sqlglot.exp.Insert, sqlglot.exp.Update, sqlglot.exp.Delete, sqlglot.exp.Merge)):
@@ -310,7 +310,7 @@ class HardchargerSession(
         """Bulk-load Arrow or pandas data into a Hardcharger table with ADBC ``adbc_ingest()``.
 
         The data streams to the server as columnar Arrow record batches over
-        the session's connection (Warp SQL bulk ingest), instead of the
+        the session's connection (Chargewire bulk ingest), instead of the
         row-by-row SQL ``VALUES`` path :meth:`createDataFrame` uses, which is
         much faster for anything beyond a few thousand rows. An ingest is one
         transaction: if it fails, none of its rows remain.
