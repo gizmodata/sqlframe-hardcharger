@@ -6,6 +6,30 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-05
+
+### Fixed
+
+- `session.sql()` takes every argument SQLFrame 4.10's does: SQL parameters (`args={"x": 1}` for
+  `:x`, a list for `?`, also as the second positional argument) and keyword format fields
+  (`session.sql("SELECT * FROM {df}", df=df)`). With SQLFrame 4.10 they raised `TypeError`
+  ("unexpected keyword argument 'args'"), because this package's `sql()` (which registers tables
+  SQLFrame doesn't know yet and retries) didn't pass them on.
+
+### Changed
+
+- Require `adbc-driver-hardcharger` 2.3.0 (was 2.1.0); CI tests the driver built from its v2.3.0
+  release commit. It brings:
+  - **A replacement session keeps the connection's settings and tags.** When the server lost a
+    session (an idle eviction, `session_ended` with `token_expired` or `idle_in_transaction`), the
+    session the driver opened in its place had none of the `hardcharger.settings` or the session
+    and query tags (`query_timeout` went from 12 to 0). The driver now sets them up in every
+    session it opens for the connection.
+  - **Waiting for a resuming server.** While a stopped GizmoData Cloud cluster starts again
+    because a client connected, the driver waits and retries (`server_resuming`, up to 600 s by
+    default; set `adbc.hardcharger.resume_timeout` through `hardcharger.db_kwargs`, `0` to fail
+    at once).
+
 ## [2.1.1] - 2026-10-29
 
 ### Fixed

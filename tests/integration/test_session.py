@@ -1,5 +1,15 @@
 """Integration tests for HardchargerSession."""
 
+import inspect
+import uuid
+
+import pytest
+from sqlframe.base.session import _BaseSession
+
+# sqlframe 4.10.0 added sql(args=...) (":name" / "?" parameters, also as the second positional
+# argument) and keyword format fields (sql("... {df}", df=df)); 4.9.0, the floor, has neither.
+SQL_ARGS = "args" in inspect.signature(obj=_BaseSession.sql).parameters
+
 
 class TestHardchargerSession:
     """Tests for HardchargerSession operations."""
@@ -349,3 +359,50 @@ class TestDuckDB2Lambdas:
         assert row.tens == [10, 20, None, 30]
         assert row.big == [2, 3]
         assert row.compact == [1, 2, 3]
+
+
+class TestSqlArguments:
+    """HardchargerSession.sql() overrides sqlframe's (to register unknown tables and retry), so it
+    must take every argument the base takes: with sqlframe 4.10 a call with ``args`` or format
+    fields raised TypeError ("unexpected keyword argument 'args'"). On sqlframe 4.9 the base
+    itself refuses them."""
+
+    def _sql(self, session, *positional, refused=TypeError, **keywords):
+        if SQL_ARGS:
+            return session.sql(*positional, **keywords).collect()
+        with pytest.raises(refused):
+            _BaseSession.sql(session, *positional, **keywords)
+        return None
+
+    def test_named_args(self, session):
+        rows = self._sql(session, "SELECT :x + 1 AS v", args={"x": 41})
+        assert rows is None or [row.v for row in rows] == [42]
+
+    def test_positional_args_as_second_argument(self, session):
+        # sqlframe 4.9 reads the list as a dialect: "Invalid dialect type".
+        rows = self._sql(session, "SELECT ? AS v", [7], refused=ValueError)
+        assert rows is None or [row.v for row in rows] == [7]
+
+    def test_dataframe_format_field(self, session):
+        df = session.createDataFrame(data=[(1,), (2,), (3,)], schema=["n"])
+        rows = self._sql(session, "SELECT sum(n) AS s FROM {df}", df=df)
+        assert rows is None or [row.s for row in rows] == [6]
+
+    def test_args_on_a_table_sqlframe_does_not_know(self, session, monkeypatch):
+        """A table created through SQL isn't in sqlframe's registry: the override registers it
+        and retries, keeping the args."""
+        table = f"sql_args_{uuid.uuid4().hex[:8]}"
+        registered = []
+        register = session._register_table_for_qualify
+
+        def spy(table):
+            registered.append(table.name)
+            return register(table=table)
+
+        monkeypatch.setattr(target=session, name="_register_table_for_qualify", value=spy)
+        session._cur.execute(f"CREATE TABLE {table} AS SELECT range AS n FROM range(5)")
+        try:
+            rows = self._sql(session, f"SELECT n FROM {table} WHERE n >= :lo ORDER BY n", args={"lo": 3})
+            assert rows is None or ([row.n for row in rows] == [3, 4] and registered == [table])
+        finally:
+            session._cur.execute(f"DROP TABLE {table}")

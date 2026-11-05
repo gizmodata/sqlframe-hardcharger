@@ -179,9 +179,13 @@ class HardchargerSession(
                 return [self._to_row(columns=["count"], values=[self._cur.rowcount])]
         return rows
 
-    def sql(self, sqlQuery, dialect=None, qualify: bool = True):
+    def sql(self, sqlQuery, dialect=None, qualify: bool = True, args=None, **kwargs):
         """Like the base ``sql()``, but self-healing for tables sqlframe
         doesn't know yet.
+
+        Takes every argument the base does: sqlframe 4.10's ``args`` (``:name``
+        or ``?`` parameters, also as the second positional argument) and keyword
+        format fields (``sql("... {df}", df=df)``) pass through unchanged.
 
         sqlframe qualifies queries against its in-session schema registry and
         rejects references to unregistered tables ("Column 'x' could not be
@@ -190,11 +194,15 @@ class HardchargerSession(
         introspect each referenced table through the catalog (DESCRIBE) and
         retry once, so plain PySpark flows like CTAS-then-SELECT just work.
         """
+        if args is not None:
+            kwargs["args"] = args
         try:
-            return super().sql(sqlQuery, dialect=dialect, qualify=qualify)
+            return super().sql(sqlQuery, dialect=dialect, qualify=qualify, **kwargs)
         except sqlglot.errors.OptimizeError:
+            # sqlframe 4.10 also takes SQL args (a dict or list) in place of the dialect.
+            read = None if isinstance(dialect, (dict, list)) else dialect
             expression = (
-                sqlglot.parse_one(sql=sqlQuery, read=dialect or self.input_dialect)
+                sqlglot.parse_one(sql=sqlQuery, read=read or self.input_dialect)
                 if isinstance(sqlQuery, str)
                 else sqlQuery
             )
@@ -214,7 +222,7 @@ class HardchargerSession(
             find_cache = getattr(self.catalog._schema, "_find_cache", None)
             if find_cache is not None:
                 find_cache.clear()
-            return super().sql(sqlQuery, dialect=dialect, qualify=qualify)
+            return super().sql(sqlQuery, dialect=dialect, qualify=qualify, **kwargs)
 
     def _register_table_for_qualify(self, table: sqlglot.exp.Table) -> None:
         """Register one referenced table's columns with sqlframe's catalog.
