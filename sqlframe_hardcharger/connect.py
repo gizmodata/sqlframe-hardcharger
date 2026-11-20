@@ -65,7 +65,7 @@ class HardchargerAdbcCursor:
         )
 
     def set_statement_options(self, options: t.Dict[str, str]) -> None:
-        """Set ADBC statement options (``adbc.chargewire.*``) on this cursor's statement."""
+        """Set ADBC statement options (``hardcharger.*``, ``StatementOptions``) on this cursor's statement."""
         self._open_inner().adbc_statement.set_options(**options)
 
     def fetchone(self) -> t.Any:

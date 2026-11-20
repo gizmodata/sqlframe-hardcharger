@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Changed
+
+- Requires `adbc-driver-hardcharger` 2.7.0 or newer (was 2.3.0), and uses its option names, which
+  follow the ADBC driver style guide: ordered bulk loads set `hardcharger.ingest.parts` (was
+  `adbc.chargewire.ingest.parts`), from the driver's `StatementOptions`, so the driver prints no
+  deprecation line. The README says which names `hardcharger.db_kwargs` takes: the driver's
+  option names, which are not the builder's `hardcharger.<name>` keys. CI builds the driver at
+  v2.7.0 (was v2.3.0).
+
 ## [2.2.0] - 2026-11-05
 
 ### Fixed

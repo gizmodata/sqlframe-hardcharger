@@ -39,7 +39,7 @@ classifiers = [
 dependencies = [
     "sqlframe>=4.9.0",
     "sqlglot>=30.22.0",
-    "adbc-driver-hardcharger>=2.3.0",
+    "adbc-driver-hardcharger>=2.7.0",
     "pyarrow>=26.0.0",
 ]
 

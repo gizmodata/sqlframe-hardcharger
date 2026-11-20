@@ -51,7 +51,7 @@ pip install sqlframe-hardcharger
 ```
 
 Python 3.11 or later. It installs SQLFrame, pyarrow and the driver,
-`adbc-driver-hardcharger` 2.3.0 or newer, from PyPI.
+`adbc-driver-hardcharger` 2.7.0 or newer, from PyPI.
 
 ## 🚀 Quick start
 
@@ -132,7 +132,7 @@ argument of `activate()`. They are the keyword arguments of
 | `hardcharger.session_tag`, `hardcharger.query_tag` | JSON objects the server records with the session and its statements |
 | `hardcharger.settings` | `hardcharger.*` session settings, e.g. `{"query_timeout": 60}` |
 | `hardcharger.catalog`, `hardcharger.db_schema` | The session's current catalog and schema |
-| `hardcharger.db_kwargs`, `hardcharger.conn_kwargs` | Any other ADBC option (`adbc.hardcharger.*`, `adbc.chargewire.*`, `adbc.telemetry.*`) |
+| `hardcharger.db_kwargs`, `hardcharger.conn_kwargs` | Any other ADBC option, by the driver's own option names (`hardcharger.retry.max_attempts`, `hardcharger.ipc.compression`, `adbc.telemetry.*`, ...; the `DatabaseOptions` and `ConnectionOptions` of `adbc_driver_hardcharger`). These are not the builder's keys: the builder's `hardcharger.auth_type` is `connect()`'s `auth_type` argument, while the driver option `hardcharger.auth.type` goes only in `db_kwargs` |
 
 A token from your identity platform:
 
