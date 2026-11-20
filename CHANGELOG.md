@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-20
+
 ### Changed
 
 - Requires `adbc-driver-hardcharger` 2.7.0 or newer (was 2.3.0), and uses its option names, which
