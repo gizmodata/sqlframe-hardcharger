@@ -9,6 +9,7 @@ from functools import cached_property
 
 import pyarrow as pa
 import sqlglot
+from adbc_driver_hardcharger import StatementOptions
 from sqlframe.base.session import _BaseSession
 from sqlframe.base.util import normalize_string, quote_preserving_alias_or_name
 from sqlglot.dialects.dialect import Dialect
@@ -47,9 +48,9 @@ IngestMode = t.Literal["append", "create", "replace", "create_append"]
 _INGEST_TARGET_BATCH_BYTES = 8 * 1024 * 1024
 
 #: The statement option that caps how many connections one bulk ingest uses
-#: (``adbc.chargewire.ingest.parts``; the driver's default is 8). 1 sends one ordered
+#: (``hardcharger.ingest.parts``; the driver's default is 8). 1 sends one ordered
 #: stream, so rows land in the table in the order they were sent.
-INGEST_PARTS_OPTION = "adbc.chargewire.ingest.parts"
+INGEST_PARTS_OPTION = StatementOptions.INGEST_PARTS.value
 
 # The keyword arguments of adbc_driver_hardcharger.dbapi.connect() that the
 # session builder takes as ``hardcharger.<name>`` config keys, and activate()

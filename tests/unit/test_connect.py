@@ -47,6 +47,17 @@ def test_statement_options_reach_the_driver_statement():
 
     inner = MagicMock()
     cursor = HardchargerAdbcCursor(parent=MagicMock(), inner=inner)
-    cursor.set_statement_options(options={"adbc.chargewire.ingest.parts": "1"})
+    cursor.set_statement_options(options={"hardcharger.ingest.parts": "1"})
 
-    inner.adbc_statement.set_options.assert_called_once_with(**{"adbc.chargewire.ingest.parts": "1"})
+    inner.adbc_statement.set_options.assert_called_once_with(**{"hardcharger.ingest.parts": "1"})
+
+
+def test_the_ingest_option_is_the_drivers_current_name():
+    """adbc-driver-hardcharger 2.7.0's name, set once per ingest statement: the driver prints no
+    deprecation line, and no second spelling of it is ever sent beside it."""
+    from adbc_driver_hardcharger import StatementOptions, _legacy
+
+    from sqlframe_hardcharger.session import INGEST_PARTS_OPTION
+
+    assert INGEST_PARTS_OPTION == StatementOptions.INGEST_PARTS.value == "hardcharger.ingest.parts"
+    assert _legacy.current_key(key=INGEST_PARTS_OPTION) == (INGEST_PARTS_OPTION, 0)
